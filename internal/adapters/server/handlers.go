@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 func (o *Rest) HShortenerURL(w http.ResponseWriter, r *http.Request) {
@@ -17,18 +18,13 @@ func (o *Rest) HShortenerURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Content-Type") != "text/plain" {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusCreated)
+		http.Error(w, "Error reading request body", http.StatusBadRequest)
 		return
 	}
 
-	reqObj := string(body)
+	reqObj := strings.TrimSpace(string(body))
 
 	shortURL := o.generateShortURL()
 

@@ -50,7 +50,7 @@ func (o *Rest) Stop(ctx context.Context) error {
 
 func (o *Rest) generateShortURL() string {
 	const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	const shortURLLength = 6
+	const shortURLLength = 8
 	var result strings.Builder
 	for i := 0; i < shortURLLength; i++ {
 		result.WriteByte(alphabet[rand.Intn(len(alphabet))])
