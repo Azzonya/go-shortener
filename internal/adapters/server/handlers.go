@@ -45,7 +45,7 @@ func (o *Rest) HRedirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
+	//w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Location", URL)
 	http.Redirect(w, r, URL, http.StatusTemporaryRedirect)
 }
