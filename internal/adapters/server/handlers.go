@@ -38,8 +38,14 @@ func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
 func (o *Rest) HRedirect(w http.ResponseWriter, r *http.Request) {
 	shortURL := r.RequestURI[1:]
 
-	URL := o.urlMap[shortURL]
+	URL, exist := o.urlMap[shortURL]
+
+	if !exist {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
 
 	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Location", URL)
 	http.Redirect(w, r, URL, http.StatusTemporaryRedirect)
 }
