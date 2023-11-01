@@ -31,7 +31,7 @@ func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
 	o.urlMap[shortURL] = reqObj
 
 	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	fmt.Fprint(w, shortURL)
 }
 
