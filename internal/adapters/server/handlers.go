@@ -36,7 +36,7 @@ func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Rest) HRedirect(w http.ResponseWriter, r *http.Request) {
-	shortURL := r.RequestURI[1:]
+	shortURL := r.URL.Path[1:]
 
 	URL, exist := o.urlMap[shortURL]
 
