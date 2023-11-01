@@ -11,9 +11,7 @@ func (o *Rest) HShortenerURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		o.HShortener(w, r)
 	} else if r.Method == http.MethodGet {
-		o.redirectToOriginalURLHandler(w, r)
-	} else {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		o.HRedirect(w, r)
 	}
 }
 
@@ -50,16 +48,16 @@ func (o *Rest) HRedirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, URL, http.StatusTemporaryRedirect)
 }
 
-func (o *Rest) redirectToOriginalURLHandler(w http.ResponseWriter, r *http.Request) {
-	shortID := r.URL.Path[1:]
-
-	fmt.Println(shortID)
-
-	originalURL, exists := o.urlMap[shortID]
-	if exists {
-		w.Header().Set("Location", originalURL)
-		http.Redirect(w, r, originalURL, http.StatusTemporaryRedirect)
-	} else {
-		http.Error(w, "URL not found", http.StatusBadRequest)
-	}
-}
+//func (o *Rest) redirectToOriginalURLHandler(w http.ResponseWriter, r *http.Request) {
+//	shortID := r.URL.Path[1:]
+//
+//	fmt.Println(shortID)
+//
+//	originalURL, exists := o.urlMap[shortID]
+//	if exists {
+//		w.Header().Set("Location", originalURL)
+//		http.Redirect(w, r, originalURL, http.StatusTemporaryRedirect)
+//	} else {
+//		http.Error(w, "URL not found", http.StatusBadRequest)
+//	}
+//}
