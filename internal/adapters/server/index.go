@@ -20,8 +20,7 @@ func New() *Rest {
 }
 
 func (o *Rest) Start(lAddr string) {
-	http.HandleFunc("/", o.HShortener)
-	http.HandleFunc("/:id", o.HRedirect)
+	http.HandleFunc("/", o.HShortenerUrl)
 
 	o.server = &http.Server{
 		Addr: lAddr,

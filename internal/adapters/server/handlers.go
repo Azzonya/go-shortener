@@ -6,8 +6,18 @@ import (
 	"net/http"
 )
 
-func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
+func (o *Rest) HShortenerUrl(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
+		o.HShortener(w, r)
+	} else if r.Method == http.MethodGet {
+		o.HRedirect(w, r)
+	} else {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+	}
+}
+
+func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
@@ -35,22 +45,15 @@ func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Rest) HRedirect(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	if r.Method != http.MethodGet {
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
-	if r.Header.Get("Content-Type") != "text/plain" {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
-
-	queryParams := r.URL.Query()
-	shortUrl := queryParams.Get("id")
+	shortUrl := r.RequestURI[1:]
 
 	URL := o.urlMap[shortUrl]
 
 	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusTemporaryRedirect)
-	fmt.Fprint(w, URL)
+	http.Redirect(w, r, URL, http.StatusTemporaryRedirect)
 }
