@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (o *Rest) HShortenerUrl(w http.ResponseWriter, r *http.Request) {
+func (o *Rest) HShortenerURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		o.HShortener(w, r)
 	} else if r.Method == http.MethodGet {
@@ -35,13 +35,13 @@ func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
 
 	reqObj := string(body)
 
-	shortUrl := o.generateShortURL()
+	shortURL := o.generateShortURL()
 
-	o.urlMap[shortUrl] = reqObj
+	o.urlMap[shortURL] = reqObj
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, shortUrl)
+	fmt.Fprint(w, shortURL)
 }
 
 func (o *Rest) HRedirect(w http.ResponseWriter, r *http.Request) {
