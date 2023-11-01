@@ -4,7 +4,6 @@ import (
 	"context"
 	"math/rand"
 	"net/http"
-	"strings"
 )
 
 type Rest struct {
@@ -49,16 +48,11 @@ func (o *Rest) Stop(ctx context.Context) error {
 }
 
 func (o *Rest) generateShortURL() string {
-	const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	const shortURLLength = 8
-	var result strings.Builder
-	for i := 0; i < shortURLLength; i++ {
-		result.WriteByte(alphabet[rand.Intn(len(alphabet))])
+	const shorURLLenth = 8
+	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, shorURLLenth)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
 	}
-
-	shortURL := result.String()
-	if o.urlMap[shortURL] != "" {
-		shortURL = o.generateShortURL()
-	}
-	return shortURL
+	return string(b)
 }
