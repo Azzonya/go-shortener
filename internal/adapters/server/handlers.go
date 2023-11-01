@@ -17,11 +17,6 @@ func (o *Rest) HShortenerURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
-
 	if r.Header.Get("Content-Type") != "text/plain" {
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
@@ -29,7 +24,7 @@ func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		http.Error(w, "Error reading request body", http.StatusBadRequest)
 		return
 	}
 
@@ -45,11 +40,6 @@ func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Rest) HRedirect(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
-
 	shortURL := r.RequestURI[1:]
 
 	URL := o.urlMap[shortURL]
