@@ -56,9 +56,9 @@ func (o *Rest) generateShortURL() string {
 		result.WriteByte(alphabet[rand.Intn(len(alphabet))])
 	}
 
-	shortUrl := result.String()
-	if o.urlMap[shortUrl] != "" {
-		shortUrl = o.generateShortURL()
+	shortURL := result.String()
+	if o.urlMap[shortURL] != "" {
+		shortURL = o.generateShortURL()
 	}
-	return shortUrl
+	return shortURL
 }

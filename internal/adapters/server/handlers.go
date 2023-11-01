@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -27,7 +27,7 @@ func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
 		return
@@ -50,9 +50,9 @@ func (o *Rest) HRedirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortUrl := r.RequestURI[1:]
+	shortURL := r.RequestURI[1:]
 
-	URL := o.urlMap[shortUrl]
+	URL := o.urlMap[shortURL]
 
 	w.Header().Set("Content-Type", "text/plain")
 	http.Redirect(w, r, URL, http.StatusTemporaryRedirect)
