@@ -11,7 +11,7 @@ func main() {
 		srv *server.Rest
 	}{}
 
-	app.srv = server.New()
+	app.srv = server.New() //
 
 	app.srv.Start(":8080")
 }
