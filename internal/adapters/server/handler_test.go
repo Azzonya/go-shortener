@@ -65,7 +65,7 @@ func TestRest_HShortenerURL_HShortener(t *testing.T) {
 
 			assert.Equal(t, tt.want.testURL, originalURL)
 		})
-	}
+	} //
 }
 
 func TestRest_HShortenerURL_HRedirect(t *testing.T) {
