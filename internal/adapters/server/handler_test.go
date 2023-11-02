@@ -103,6 +103,8 @@ func TestRest_HShortenerURL_HRedirect(t *testing.T) {
 			tt.rest.HRedirect(w, request)
 
 			result := w.Result()
+			err := result.Body.Close()
+			require.NoError(t, err)
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 			assert.Equal(t, tt.want.location, result.Header.Get("Location"))
