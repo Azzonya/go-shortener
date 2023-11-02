@@ -30,7 +30,7 @@ func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprint(w, fmt.Sprintf("http://localhost:8080/"+shortURL))
+	fmt.Fprint(w, "http://localhost:8080/"+shortURL)
 }
 
 func (o *Rest) HRedirect(w http.ResponseWriter, r *http.Request) {
