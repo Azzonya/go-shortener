@@ -1,24 +1,24 @@
 package server
 
 import (
-	"fmt"
+	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"strings"
 )
 
-func (o *Rest) HShortenerURL(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		o.HShortener(w, r)
-	} else if r.Method == http.MethodGet {
-		o.HRedirect(w, r)
-	}
-}
+//func (o *Rest) HShortenerURL(w http.ResponseWriter, r *http.Request) {
+//	if r.Method == http.MethodPost {
+//		o.HShortener(w, r)
+//	} else if r.Method == http.MethodGet {
+//		o.HRedirect(w, r)
+//	}
+//}
 
-func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
+func (o *Rest) HShortener(c *gin.Context) {
+	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Не удалось прочитать тело запроса"})
 		return
 	}
 
@@ -28,22 +28,25 @@ func (o *Rest) HShortener(w http.ResponseWriter, r *http.Request) {
 
 	o.urlMap[shortURL] = reqObj
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprint(w, "http://localhost:8080/"+shortURL)
+	c.Header("Content-Type", "text/plain")
+	c.String(http.StatusCreated, "http://localhost:8080/"+shortURL)
 }
 
-func (o *Rest) HRedirect(w http.ResponseWriter, r *http.Request) {
-	shortURL := r.RequestURI[1:]
+func (o *Rest) HRedirect(c *gin.Context) {
+	shortURL, exist := c.Params.Get("id")
+	if !exist {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Не удалось получить ID"})
+		return
+	}
 
 	URL, exist := o.urlMap[shortURL]
 
 	if !exist {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Не удалось получить оригинальную ссылку"})
 		return
 	}
 
 	//w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Location", URL)
-	http.Redirect(w, r, URL, http.StatusTemporaryRedirect)
+	c.Header("Location", URL)
+	c.Redirect(http.StatusTemporaryRedirect, URL)
 }

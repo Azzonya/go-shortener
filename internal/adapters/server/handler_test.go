@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -35,14 +36,19 @@ func TestRest_HShortenerURL_HShortener(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.rest.urlMap = make(map[string]string)
 
+			r := gin.Default()
+			r.POST(tt.request, tt.rest.HShortener)
+
 			request := httptest.NewRequest(tt.requestMethod, tt.request, strings.NewReader(tt.want.testURL))
 
 			w := httptest.NewRecorder()
-			tt.rest.HShortenerURL(w, request)
+			r.ServeHTTP(w, request)
+			//tt.rest.HShortenerURL(w, request)
 
 			result := w.Result()
 
@@ -93,6 +99,9 @@ func TestRest_HShortenerURL_HRedirect(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			r := gin.Default()
+			r.GET("/:id", tt.rest.HRedirect)
+
 			testShortURL := "Abcdefgh"
 			tt.rest.urlMap = make(map[string]string)
 			tt.rest.urlMap[testShortURL] = tt.want.location
@@ -100,7 +109,7 @@ func TestRest_HShortenerURL_HRedirect(t *testing.T) {
 			request := httptest.NewRequest(tt.requestMethod, "/"+testShortURL, nil)
 
 			w := httptest.NewRecorder()
-			tt.rest.HRedirect(w, request)
+			r.ServeHTTP(w, request)
 
 			result := w.Result()
 			err := result.Body.Close()

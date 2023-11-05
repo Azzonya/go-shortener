@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
 	"math/rand"
 	"net/http"
 )
@@ -19,7 +20,12 @@ func New() *Rest {
 }
 
 func (o *Rest) Start(lAddr string) {
-	http.HandleFunc("/", o.HShortenerURL)
+	gin.SetMode(gin.ReleaseMode)
+
+	r := gin.Default()
+
+	r.GET("/", o.HRedirect)
+	r.POST("/:id", o.HShortener)
 
 	o.server = &http.Server{
 		Addr: lAddr,
