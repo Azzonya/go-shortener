@@ -24,11 +24,12 @@ func (o *Rest) Start(lAddr string) {
 
 	r := gin.Default()
 
-	r.GET("/", o.HRedirect)
-	r.POST("/:id", o.HShortener)
+	r.POST("/", o.HShortener)
+	r.GET("/:id", o.HRedirect)
 
 	o.server = &http.Server{
-		Addr: lAddr,
+		Addr:    lAddr,
+		Handler: r,
 	}
 
 	//go func() {
