@@ -8,14 +8,16 @@ import (
 )
 
 type Rest struct {
-	server *http.Server
-	urlMap map[string]string
+	server  *http.Server
+	urlMap  map[string]string
+	baseURL string
 	//ch     chan error
 }
 
-func New() *Rest {
+func New(baseURL string) *Rest {
 	return &Rest{
-		urlMap: make(map[string]string),
+		baseURL: baseURL,
+		urlMap:  make(map[string]string),
 	}
 }
 

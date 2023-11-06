@@ -5,13 +5,13 @@ import (
 )
 
 func main() {
-	initConfig()
+	conf := initConfig()
 
 	app := struct {
 		srv *server.Rest
 	}{}
 
-	app.srv = server.New() //
+	app.srv = server.New(conf.BaseURL) //
 
 	app.srv.Start(":8080")
 }

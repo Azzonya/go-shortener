@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
@@ -28,8 +29,10 @@ func (o *Rest) HShortener(c *gin.Context) {
 
 	o.urlMap[shortURL] = reqObj
 
+	outputURL := fmt.Sprintf("%s/%s", o.baseURL, shortURL)
+
 	c.Header("Content-Type", "text/plain")
-	c.String(http.StatusCreated, "http://localhost:8080/"+shortURL)
+	c.String(http.StatusCreated, outputURL)
 }
 
 func (o *Rest) HRedirect(c *gin.Context) {
