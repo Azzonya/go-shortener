@@ -9,8 +9,8 @@ type conf struct {
 
 func initConfig() conf {
 	conf := conf{}
-	flag.StringVar(&conf.HTTPListen, "a", "localhost:8081", "address and port to run server")
-	flag.StringVar(&conf.BaseURL, "b", "http://localhost:8081", "base address of the resulting shortened URL")
+	flag.StringVar(&conf.HTTPListen, "a", "localhost:8080", "address and port to run server")
+	flag.StringVar(&conf.BaseURL, "b", "http://localhost:8080", "base address of the resulting shortened URL")
 	flag.Parse()
 
 	return conf
