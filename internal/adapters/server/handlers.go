@@ -17,6 +17,7 @@ import (
 //}
 
 func (o *Rest) HShortener(c *gin.Context) {
+	fmt.Println(1)
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Не удалось прочитать тело запроса"})

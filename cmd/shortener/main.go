@@ -13,5 +13,5 @@ func main() {
 
 	app.srv = server.New(conf.BaseURL) //
 
-	app.srv.Start(":8080")
+	app.srv.Start(conf.HTTPListen)
 }
