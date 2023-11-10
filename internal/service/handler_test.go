@@ -1,4 +1,4 @@
-package server
+package service
 
 import (
 	"github.com/gin-gonic/gin"
@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestRest_HShortenerURL_HShortener(t *testing.T) {
+func TestRest_Shorten(t *testing.T) {
 	type want struct {
 		contentType string
 		statusCode  int
@@ -39,10 +39,10 @@ func TestRest_HShortenerURL_HShortener(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.rest.urlMap = make(map[string]string)
+			tt.rest.storage = NewStorage()
 
 			r := gin.Default()
-			r.POST(tt.request, tt.rest.HShortener)
+			r.POST(tt.request, tt.rest.Shorten)
 
 			request := httptest.NewRequest(tt.requestMethod, tt.request, strings.NewReader(tt.want.testURL))
 
@@ -64,9 +64,9 @@ func TestRest_HShortenerURL_HShortener(t *testing.T) {
 
 			parts := strings.Split(shortURL, "/")
 
-			originalURL, exist := tt.rest.urlMap[parts[len(parts)-1]]
+			originalURL, exist := tt.rest.storage.getOne(parts[len(parts)-1])
 			if !exist {
-				require.Fail(t, "Expected short URL in urlMap", tt.rest.urlMap)
+				require.Fail(t, "Expected short URL in urlMap", tt.rest.storage.urlMap)
 			}
 
 			assert.Equal(t, tt.want.testURL, originalURL)
@@ -74,7 +74,7 @@ func TestRest_HShortenerURL_HShortener(t *testing.T) {
 	} //
 }
 
-func TestRest_HShortenerURL_HRedirect(t *testing.T) {
+func TestRest_Redirect(t *testing.T) {
 	type want struct {
 		location   string
 		statusCode int
@@ -100,11 +100,11 @@ func TestRest_HShortenerURL_HRedirect(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := gin.Default()
-			r.GET("/:id", tt.rest.HRedirect)
+			r.GET("/:id", tt.rest.Redirect)
 
 			testShortURL := "Abcdefgh"
-			tt.rest.urlMap = make(map[string]string)
-			tt.rest.urlMap[testShortURL] = tt.want.location
+			tt.rest.storage = NewStorage()
+			tt.rest.storage.add(testShortURL, tt.want.location)
 
 			request := httptest.NewRequest(tt.requestMethod, "/"+testShortURL, nil)
 

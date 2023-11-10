@@ -1,17 +1,13 @@
 package main
 
 import (
-	"github.com/Azzonya/go-shortener/internal/adapters/server"
+	"github.com/Azzonya/go-shortener/internal/service"
 )
 
 func main() {
 	conf := initConfig()
 
-	app := struct {
-		srv *server.Rest
-	}{}
+	srv := service.New(conf.BaseURL)
 
-	app.srv = server.New(conf.BaseURL) //
-
-	app.srv.Start(conf.HTTPListen)
+	srv.Start(conf.HTTPListen)
 }

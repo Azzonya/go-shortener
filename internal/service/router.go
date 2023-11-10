@@ -1,15 +1,14 @@
-package server
+package service
 
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"math/rand"
 	"net/http"
 )
 
 type Rest struct {
 	server  *http.Server
-	urlMap  map[string]string
+	storage *Storage
 	baseURL string
 	//ch     chan error
 }
@@ -17,7 +16,7 @@ type Rest struct {
 func New(baseURL string) *Rest {
 	return &Rest{
 		baseURL: baseURL,
-		urlMap:  make(map[string]string),
+		storage: NewStorage(),
 	}
 }
 
@@ -26,26 +25,20 @@ func (o *Rest) Start(lAddr string) {
 
 	r := gin.Default()
 
-	r.POST("/", o.HShortener)
-	r.GET("/:id", o.HRedirect)
+	r.POST("/", o.Shorten)
+	r.GET("/:id", o.Redirect)
 
 	o.server = &http.Server{
 		Addr:    lAddr,
 		Handler: r,
 	}
 
-	//go func() {
 	err := o.server.ListenAndServe()
 
 	if err != nil && err != http.ErrServerClosed {
 		return
 	}
-	//}()
 }
-
-//func (o *Rest) Wait() chan error {
-//	return o.ch
-//}
 
 func (o *Rest) Stop(ctx context.Context) error {
 	err := o.server.Shutdown(ctx)
@@ -54,14 +47,4 @@ func (o *Rest) Stop(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func (o *Rest) generateShortURL() string {
-	const shorURLLenth = 8
-	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := make([]rune, shorURLLenth)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
 }
