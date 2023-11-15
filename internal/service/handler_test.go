@@ -67,7 +67,7 @@ func TestRest_Shorten(t *testing.T) {
 
 			originalURL, exist := tt.rest.storage.GetOne(parts[len(parts)-1])
 			if !exist {
-				require.Fail(t, "Expected short URL in urlMap", tt.rest.storage.UrlMap)
+				require.Fail(t, "Expected short URL in urlMap", tt.rest.storage.URLMap)
 			}
 
 			assert.Equal(t, tt.want.testURL, originalURL)
