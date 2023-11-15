@@ -1,7 +1,7 @@
 package storage
 
 type Storage struct {
-	UrlMap map[string]string
+	URLMap map[string]string
 }
 
 func NewStorage() *Storage {
@@ -11,10 +11,10 @@ func NewStorage() *Storage {
 }
 
 func (s *Storage) Add(key, value string) {
-	s.UrlMap[key] = value
+	s.URLMap[key] = value
 }
 
 func (s *Storage) GetOne(key string) (string, bool) {
-	URL, exist := s.UrlMap[key]
+	URL, exist := s.URLMap[key]
 	return URL, exist
 }
