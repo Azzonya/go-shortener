@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
+	storage2 "github.com/Azzonya/go-shortener/internal/storage"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type Rest struct {
 	server  *http.Server
-	storage *Storage
+	storage *storage2.Storage
 	baseURL string
 	//ch     chan error
 }
@@ -16,7 +17,7 @@ type Rest struct {
 func New(baseURL string) *Rest {
 	return &Rest{
 		baseURL: baseURL,
-		storage: NewStorage(),
+		storage: storage2.NewStorage(),
 	}
 }
 

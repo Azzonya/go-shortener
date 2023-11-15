@@ -1,11 +1,12 @@
 package main
 
 import (
+	"github.com/Azzonya/go-shortener/internal/cfg"
 	"github.com/Azzonya/go-shortener/internal/service"
 )
 
 func main() {
-	conf := initConfig()
+	conf := cfg.InitConfig()
 
 	srv := service.New(conf.BaseURL)
 

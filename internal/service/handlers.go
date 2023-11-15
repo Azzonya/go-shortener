@@ -21,7 +21,7 @@ func (o *Rest) Shorten(c *gin.Context) {
 
 	shortURL := util.GenerateShortURL()
 
-	o.storage.add(shortURL, reqObj)
+	o.storage.Add(shortURL, reqObj)
 
 	outputURL := fmt.Sprintf("%s/%s", o.baseURL, shortURL)
 
@@ -36,7 +36,7 @@ func (o *Rest) Redirect(c *gin.Context) {
 		return
 	}
 
-	URL, exist := o.storage.getOne(shortURL)
+	URL, exist := o.storage.GetOne(shortURL)
 	if !exist {
 		c.String(http.StatusBadRequest, "Не удалось получить оригинальную ссылку")
 		return
