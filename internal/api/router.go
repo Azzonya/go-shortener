@@ -1,4 +1,4 @@
-package service
+package api
 
 import (
 	"context"
@@ -33,8 +33,7 @@ func (o *Rest) Start(lAddr string) {
 
 	r.Use(logger.RequestLogger(logger.Log), gin.Recovery())
 
-	r.POST("/", o.Shorten)
-	r.GET("/:id", o.Redirect)
+	o.SetRouters(r)
 
 	o.server = &http.Server{
 		Addr:    lAddr,
@@ -55,4 +54,10 @@ func (o *Rest) Stop(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (o *Rest) SetRouters(r *gin.Engine) {
+	r.POST("/", o.Shorten)
+	r.GET("/:id", o.Redirect)
+	r.POST("/api/shorten", o.Shorten)
 }
