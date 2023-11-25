@@ -59,5 +59,5 @@ func (o *Rest) Stop(ctx context.Context) error {
 func (o *Rest) SetRouters(r *gin.Engine) {
 	r.POST("/", o.Shorten)
 	r.GET("/:id", o.Redirect)
-	r.POST("/api/shorten", o.Shorten)
+	r.POST("/api/shorten", o.ShortenJSON)
 }
