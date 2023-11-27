@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"github.com/Azzonya/go-shortener/internal/logger"
+	"github.com/Azzonya/go-shortener/internal/middleware"
 	storage2 "github.com/Azzonya/go-shortener/internal/storage"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -31,7 +32,9 @@ func (o *Rest) Start(lAddr string) {
 
 	r := gin.Default()
 
-	r.Use(logger.RequestLogger(logger.Log), gin.Recovery())
+	r.Use(middleware.RequestLogger(logger.Log), gin.Recovery())
+	r.Use(middleware.CompressRequest(), gin.Recovery())
+	r.Use(middleware.DecompressRequest(), gin.Recovery())
 
 	o.SetRouters(r)
 
