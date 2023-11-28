@@ -13,8 +13,10 @@ type appSt struct {
 	storage *storage.Storage
 }
 
-func (a *appSt) Init(conf cfg.Conf) {
+func (a *appSt) Init(conf *cfg.Conf) {
 	var err error
+
+	a.conf = conf
 
 	if err = logger.Initialize(conf.LogLevel); err != nil {
 		panic(err)
@@ -37,6 +39,6 @@ func Start() {
 
 	app := &appSt{}
 
-	app.Init(conf)
+	app.Init(&conf)
 	app.Start()
 }
