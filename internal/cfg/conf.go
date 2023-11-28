@@ -6,9 +6,10 @@ import (
 )
 
 type Conf struct {
-	HTTPListen string `env:"SERVER_ADDRESS"`
-	BaseURL    string `env:"BASE_URL"`
-	LogLevel   string `env:"LOG_LEVEL"`
+	HTTPListen      string `env:"SERVER_ADDRESS"`
+	BaseURL         string `env:"BASE_URL"`
+	LogLevel        string `env:"LOG_LEVEL"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 }
 
 func InitConfig() Conf {
@@ -16,6 +17,7 @@ func InitConfig() Conf {
 	flag.StringVar(&conf.HTTPListen, "a", "localhost:8080", "address and port to run server")
 	flag.StringVar(&conf.BaseURL, "b", "http://localhost:8080", "base address of the resulting shortened URL")
 	flag.StringVar(&conf.LogLevel, "l", "info", "log level")
+	flag.StringVar(&conf.FileStoragePath, "f", "/tmp/short-url-db.json", "file path")
 	flag.Parse()
 
 	err := env.Parse(&conf)

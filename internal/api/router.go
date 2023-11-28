@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/middleware"
-	storage2 "github.com/Azzonya/go-shortener/internal/storage"
+	stor "github.com/Azzonya/go-shortener/internal/storage"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
@@ -12,16 +12,16 @@ import (
 
 type Rest struct {
 	server  *http.Server
-	storage *storage2.Storage
+	storage *stor.Storage
 	baseURL string
 	logger  zap.Logger
 	//ch     chan error
 }
 
-func New(baseURL string) *Rest {
+func New(baseURL string, storage *stor.Storage) *Rest {
 	return &Rest{
 		baseURL: baseURL,
-		storage: storage2.NewStorage(),
+		storage: storage,
 	}
 }
 

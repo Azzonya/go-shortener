@@ -38,9 +38,12 @@ func TestRest_Shorten(t *testing.T) {
 		},
 	}
 
+	var err error
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.rest.storage = storage.NewStorage()
+			tt.rest.storage, err = storage.NewStorage("/tmp/short-url-db.json")
+			require.NoError(t, err)
 
 			r := gin.Default()
 			r.POST(tt.request, tt.rest.Shorten)
@@ -98,14 +101,19 @@ func TestRest_Redirect(t *testing.T) {
 		},
 	}
 
+	var err error
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := gin.Default()
 			r.GET("/:id", tt.rest.Redirect)
 
 			testShortURL := "Abcdefgh"
-			tt.rest.storage = storage.NewStorage()
-			tt.rest.storage.Add(testShortURL, tt.want.location)
+			tt.rest.storage, err = storage.NewStorage("/tmp/short-url-db.json")
+			require.NoError(t, err)
+
+			err = tt.rest.storage.Add(testShortURL, tt.want.location)
+			require.NoError(t, err)
 
 			request := httptest.NewRequest(tt.requestMethod, "/"+testShortURL, nil)
 

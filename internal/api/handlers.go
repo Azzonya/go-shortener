@@ -42,7 +42,14 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 
 	shortURL := util.GenerateShortURL()
 
-	o.storage.Add(shortURL, reqObj.InputURL)
+	err = o.storage.Add(shortURL, reqObj.InputURL)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to add line to storage",
+			"error":   err.Error(),
+		})
+		return
+	}
 
 	outputURL := fmt.Sprintf("%s/%s", o.baseURL, shortURL)
 
@@ -72,7 +79,11 @@ func (o *Rest) Shorten(c *gin.Context) {
 
 	shortURL := util.GenerateShortURL()
 
-	o.storage.Add(shortURL, reqObj)
+	err = o.storage.Add(shortURL, reqObj)
+	if err != nil {
+		c.String(http.StatusBadRequest, "Failed to add line to storage")
+		return
+	}
 
 	outputURL := fmt.Sprintf("%s/%s", o.baseURL, shortURL)
 
