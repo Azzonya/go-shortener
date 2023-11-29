@@ -1,6 +1,7 @@
 package api
 
 import (
+	shortener_service "github.com/Azzonya/go-shortener/internal/shortener-service"
 	"github.com/Azzonya/go-shortener/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -38,12 +39,12 @@ func TestRest_Shorten(t *testing.T) {
 		},
 	}
 
-	var err error
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.rest.storage, err = storage.NewStorage("/tmp/short-url-db.json")
+			stor, err := storage.NewStorage("/tmp/short-url-db.json")
 			require.NoError(t, err)
+
+			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor)
 
 			r := gin.Default()
 			r.POST(tt.request, tt.rest.Shorten)
@@ -68,9 +69,9 @@ func TestRest_Shorten(t *testing.T) {
 
 			parts := strings.Split(shortURL, "/")
 
-			originalURL, exist := tt.rest.storage.GetOne(parts[len(parts)-1])
+			originalURL, exist := tt.rest.shortener.GetOne(parts[len(parts)-1])
 			if !exist {
-				require.Fail(t, "Expected short URL in urlMap", tt.rest.storage.URLMap)
+				require.Fail(t, "Expected short URL in urlMap")
 			}
 
 			assert.Equal(t, tt.want.testURL, originalURL)
@@ -101,18 +102,19 @@ func TestRest_Redirect(t *testing.T) {
 		},
 	}
 
-	var err error
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := gin.Default()
 			r.GET("/:id", tt.rest.Redirect)
 
 			testShortURL := "Abcdefgh"
-			tt.rest.storage, err = storage.NewStorage("/tmp/short-url-db.json")
+
+			stor, err := storage.NewStorage("/tmp/short-url-db.json")
 			require.NoError(t, err)
 
-			err = tt.rest.storage.Add(testShortURL, tt.want.location)
+			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor)
+
+			_, err = tt.rest.shortener.ShortenAndSaveLink(testShortURL)
 			require.NoError(t, err)
 
 			request := httptest.NewRequest(tt.requestMethod, "/"+testShortURL, nil)
@@ -121,7 +123,7 @@ func TestRest_Redirect(t *testing.T) {
 			r.ServeHTTP(w, request)
 
 			result := w.Result()
-			err := result.Body.Close()
+			//err := result.Body.Close()
 			require.NoError(t, err)
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
