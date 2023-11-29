@@ -123,7 +123,7 @@ func TestRest_Redirect(t *testing.T) {
 			r.ServeHTTP(w, request)
 
 			result := w.Result()
-			//err := result.Body.Close()
+			err = result.Body.Close()
 			require.NoError(t, err)
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
