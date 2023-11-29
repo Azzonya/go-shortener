@@ -114,7 +114,7 @@ func TestRest_Redirect(t *testing.T) {
 
 			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor)
 
-			_, err = tt.rest.shortener.ShortenAndSaveLink(testShortURL)
+			err = stor.Add(testShortURL, tt.want.location)
 			require.NoError(t, err)
 
 			request := httptest.NewRequest(tt.requestMethod, "/"+testShortURL, nil)
