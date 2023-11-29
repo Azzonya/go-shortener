@@ -2,8 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/Azzonya/go-shortener/internal/util"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
@@ -33,18 +31,14 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 		return
 	}
 
-	shortURL := util.GenerateShortURL()
-
-	err = o.storage.Add(shortURL, req.URL)
+	outputURL, err := o.shortener.ShortenAndSaveLink(req.URL)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to add line to storage",
+			"message": "Failed to create short URL",
 			"error":   err.Error(),
 		})
 		return
 	}
-
-	outputURL := fmt.Sprintf("%s/%s", o.baseURL, shortURL)
 
 	resp.Result = outputURL
 
@@ -70,15 +64,11 @@ func (o *Rest) Shorten(c *gin.Context) {
 
 	reqObj := strings.TrimSpace(string(body))
 
-	shortURL := util.GenerateShortURL()
-
-	err = o.storage.Add(shortURL, reqObj)
+	outputURL, err := o.shortener.ShortenAndSaveLink(reqObj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "Failed to add line to storage")
 		return
 	}
-
-	outputURL := fmt.Sprintf("%s/%s", o.baseURL, shortURL)
 
 	c.Header("Content-Type", "text/plain")
 	c.String(http.StatusCreated, outputURL)
@@ -91,7 +81,7 @@ func (o *Rest) Redirect(c *gin.Context) {
 		return
 	}
 
-	URL, exist := o.storage.GetOne(shortURL)
+	URL, exist := o.shortener.GetOne(shortURL)
 	if !exist {
 		c.String(http.StatusBadRequest, "Failed to get original URL")
 		return

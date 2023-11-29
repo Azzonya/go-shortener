@@ -4,24 +4,22 @@ import (
 	"context"
 	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/middleware"
-	stor "github.com/Azzonya/go-shortener/internal/storage"
+	shortener_service "github.com/Azzonya/go-shortener/internal/shortener-service"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
 )
 
 type Rest struct {
-	server  *http.Server
-	storage *stor.Storage
-	baseURL string
-	logger  zap.Logger
-	eChan   chan error
+	server    *http.Server
+	shortener *shortener_service.Shortener
+
+	eChan chan error
 }
 
-func New(baseURL string, storage *stor.Storage) *Rest {
+func New(shortener *shortener_service.Shortener) *Rest {
 	return &Rest{
-		baseURL: baseURL,
-		storage: storage,
+		shortener: shortener,
 
 		eChan: make(chan error, 1),
 	}

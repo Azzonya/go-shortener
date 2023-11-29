@@ -5,6 +5,7 @@ import (
 	"github.com/Azzonya/go-shortener/internal/api"
 	"github.com/Azzonya/go-shortener/internal/cfg"
 	"github.com/Azzonya/go-shortener/internal/logger"
+	shortener_service "github.com/Azzonya/go-shortener/internal/shortener-service"
 	"github.com/Azzonya/go-shortener/internal/storage"
 	"os"
 	"os/signal"
@@ -12,9 +13,10 @@ import (
 )
 
 type appSt struct {
-	conf    *cfg.Conf
-	api     *api.Rest
-	storage *storage.Storage
+	conf      *cfg.Conf
+	api       *api.Rest
+	storage   *storage.Storage
+	shortener *shortener_service.Shortener
 }
 
 func StopSignal() <-chan os.Signal {
@@ -37,7 +39,9 @@ func (a *appSt) Init(conf *cfg.Conf) {
 		panic(err)
 	}
 
-	a.api = api.New(conf.BaseURL, a.storage)
+	a.shortener = shortener_service.New(conf.BaseURL, a.storage)
+
+	a.api = api.New(a.shortener)
 }
 
 func (a *appSt) Start() {
