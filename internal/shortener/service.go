@@ -1,4 +1,4 @@
-package shortener_service
+package shortener
 
 import (
 	"fmt"

@@ -5,7 +5,7 @@ import (
 	"github.com/Azzonya/go-shortener/internal/api"
 	"github.com/Azzonya/go-shortener/internal/cfg"
 	"github.com/Azzonya/go-shortener/internal/logger"
-	shortener_service "github.com/Azzonya/go-shortener/internal/shortener-service"
+	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
 	"github.com/Azzonya/go-shortener/internal/storage"
 	"os"
 	"os/signal"

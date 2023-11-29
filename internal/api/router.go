@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/middleware"
-	shortener_service "github.com/Azzonya/go-shortener/internal/shortener-service"
+	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"

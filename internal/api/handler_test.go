@@ -1,7 +1,7 @@
 package api
 
 import (
-	shortener_service "github.com/Azzonya/go-shortener/internal/shortener-service"
+	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
 	"github.com/Azzonya/go-shortener/internal/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
