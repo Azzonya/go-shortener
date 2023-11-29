@@ -15,13 +15,15 @@ type Rest struct {
 	storage *stor.Storage
 	baseURL string
 	logger  zap.Logger
-	//ch     chan error
+	eChan   chan error
 }
 
 func New(baseURL string, storage *stor.Storage) *Rest {
 	return &Rest{
 		baseURL: baseURL,
 		storage: storage,
+
+		eChan: make(chan error, 1),
 	}
 }
 
@@ -43,14 +45,21 @@ func (o *Rest) Start(lAddr string) {
 		Handler: r,
 	}
 
-	err := o.server.ListenAndServe()
+	go func() {
+		err := o.server.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			o.eChan <- err
+		}
+	}()
+}
 
-	if err != nil && err != http.ErrServerClosed {
-		return
-	}
+func (o *Rest) Wait() <-chan error {
+	return o.eChan
 }
 
 func (o *Rest) Stop(ctx context.Context) error {
+	defer close(o.eChan)
+
 	err := o.server.Shutdown(ctx)
 	if err != nil {
 		return err

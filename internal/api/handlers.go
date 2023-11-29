@@ -10,31 +10,24 @@ import (
 	"strings"
 )
 
-type InputSt struct {
-	InputURL string `json:"url"`
+type Request struct {
+	URL string `json:"url"`
 }
 
-type ResultSt struct {
-	ResultURL string `json:"result"`
+type Response struct {
+	Result string `json:"result"`
 }
 
 func (o *Rest) ShortenJSON(c *gin.Context) {
-	body, err := io.ReadAll(c.Request.Body)
+	var err error
+
+	req := &Request{}
+	resp := Response{}
+
+	err = c.BindJSON(req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to read request body",
-			"error":   err.Error(),
-		})
-		return
-	}
-
-	reqObj := InputSt{}
-	repObj := ResultSt{}
-
-	err = json.Unmarshal(body, &reqObj)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to Unmarshall body",
+			"message": "Failed to read body",
 			"error":   err.Error(),
 		})
 		return
@@ -42,7 +35,7 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 
 	shortURL := util.GenerateShortURL()
 
-	err = o.storage.Add(shortURL, reqObj.InputURL)
+	err = o.storage.Add(shortURL, req.URL)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Failed to add line to storage",
@@ -53,9 +46,9 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 
 	outputURL := fmt.Sprintf("%s/%s", o.baseURL, shortURL)
 
-	repObj.ResultURL = outputURL
+	resp.Result = outputURL
 
-	resultJSON, err := json.Marshal(repObj)
+	resultJSON, err := json.Marshal(resp)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Failed to Marshall result struct",

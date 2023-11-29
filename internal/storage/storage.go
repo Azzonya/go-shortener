@@ -3,6 +3,7 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -10,10 +11,11 @@ import (
 )
 
 type Storage struct {
-	URLMap  map[string]string
-	file    *os.File
-	writer  *bufio.Writer
-	maxUUID int
+	URLMap map[string]string
+	file   *os.File
+	writer *bufio.Writer
+	dump   []Event
+	lastID int
 }
 
 type Event struct {
@@ -22,15 +24,12 @@ type Event struct {
 	OriginalURL string `json:"original_url"`
 }
 
-func NewStorage(filePath string) (*Storage, error) {
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
-	if err != nil {
-		return nil, err
-	}
-	newDecoder := json.NewDecoder(file)
-	URLMap := make(map[string]string)
+func (s *Storage) RestoreFromFile() error {
+	newDecoder := json.NewDecoder(s.file)
 
-	maxUUID := 0
+	s.URLMap = make(map[string]string)
+	s.lastID = 0
+
 	for {
 		var event Event
 		if err := newDecoder.Decode(&event); err != nil {
@@ -41,15 +40,23 @@ func NewStorage(filePath string) (*Storage, error) {
 				break
 			}
 		}
-		maxUUID += 1
-		URLMap[event.OriginalURL] = event.ShortURL
+		s.lastID += 1
+		s.URLMap[event.OriginalURL] = event.ShortURL
 	}
-	return &Storage{
-		URLMap:  URLMap,
-		file:    file,
-		writer:  bufio.NewWriter(file),
-		maxUUID: maxUUID,
-	}, nil
+
+	return nil
+}
+
+func (s *Storage) SyncData() {
+	for i := 0; i < len(s.dump); i++ {
+		err := s.WriteEvent(&s.dump[i])
+		if err != nil {
+			log.Fatalf("Sync data - %s", err.Error())
+		}
+
+		s.dump = append(s.dump[:i], s.dump[i+1:]...)
+		i--
+	}
 }
 
 func (s *Storage) Add(key, value string) error {
@@ -57,15 +64,15 @@ func (s *Storage) Add(key, value string) error {
 	if s.file == nil {
 		return nil
 	}
-	s.maxUUID += 1
+	s.lastID += 1
 	event := Event{
-		strconv.Itoa(s.maxUUID),
+		strconv.Itoa(s.lastID),
 		key,
 		value,
 	}
-	err := s.WriteEvent(&event)
+	s.dump = append(s.dump, event)
 
-	return err
+	return nil
 }
 
 func (s *Storage) GetOne(key string) (string, bool) {
@@ -80,12 +87,34 @@ func (s *Storage) WriteEvent(event *Event) error {
 	}
 
 	if _, err := s.writer.Write(data); err != nil {
+		fmt.Println(err.Error(), 1)
 		return err
 	}
 
 	if err := s.writer.WriteByte('\n'); err != nil {
+		fmt.Println(err.Error(), 2)
 		return err
 	}
 
 	return s.writer.Flush()
+}
+
+func NewStorage(filePath string) (*Storage, error) {
+	var err error
+
+	s := &Storage{}
+
+	s.file, err = os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
+	}
+
+	s.writer = bufio.NewWriter(s.file)
+
+	err = s.RestoreFromFile()
+	if err != nil {
+		return nil, err
+	}
+
+	return s, nil
 }
