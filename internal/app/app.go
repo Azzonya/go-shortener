@@ -51,7 +51,7 @@ func (a *appSt) Start() {
 func (a *appSt) Listen() {
 	select {
 	case <-StopSignal():
-	case <-a.api.Wait():
+	case <-a.api.ErrorChan:
 	}
 }
 

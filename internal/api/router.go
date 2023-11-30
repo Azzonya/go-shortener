@@ -7,6 +7,7 @@ import (
 	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"log"
 	"net/http"
 )
 
@@ -14,14 +15,14 @@ type Rest struct {
 	server    *http.Server
 	shortener *shortener_service.Shortener
 
-	eChan chan error
+	ErrorChan chan error
 }
 
 func New(shortener *shortener_service.Shortener) *Rest {
 	return &Rest{
 		shortener: shortener,
 
-		eChan: make(chan error, 1),
+		ErrorChan: make(chan error, 1),
 	}
 }
 
@@ -44,19 +45,21 @@ func (o *Rest) Start(lAddr string) {
 	}
 
 	go func() {
+		defer func() {
+			if rec := recover(); rec != nil {
+				log.Printf("Recovered from panic: %v", rec)
+			}
+		}()
+
 		err := o.server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			o.eChan <- err
+			o.ErrorChan <- err
 		}
 	}()
 }
 
-func (o *Rest) Wait() <-chan error {
-	return o.eChan
-}
-
 func (o *Rest) Stop(ctx context.Context) error {
-	defer close(o.eChan)
+	defer close(o.ErrorChan)
 
 	err := o.server.Shutdown(ctx)
 	if err != nil {
