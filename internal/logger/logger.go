@@ -11,6 +11,7 @@ func Initialize(level string) error {
 	if err != nil {
 		return err
 	}
+
 	cfg := zap.NewProductionConfig()
 
 	cfg.Level = lvl

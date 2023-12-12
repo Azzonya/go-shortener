@@ -3,18 +3,22 @@ package shortener
 import (
 	"fmt"
 	"github.com/Azzonya/go-shortener/internal/storage"
+	"github.com/Azzonya/go-shortener/pkg"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"math/rand"
 )
 
 type Shortener struct {
-	baseURL string
+	db      *pgxpool.Pool
 	storage *storage.Storage
+	baseURL string
 }
 
-func New(baseURL string, storage *storage.Storage) *Shortener {
+func New(baseURL string, storage *storage.Storage, db *pgxpool.Pool) *Shortener {
 	return &Shortener{
 		baseURL: baseURL,
 		storage: storage,
+		db:      db,
 	}
 }
 
@@ -44,4 +48,10 @@ func (s *Shortener) GenerateShortURL() string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+func (s *Shortener) PingDb() error {
+	err := pkg.PingDatabasePg(s.db)
+
+	return err
 }

@@ -90,3 +90,14 @@ func (o *Rest) Redirect(c *gin.Context) {
 	c.Header("Location", URL)
 	c.Redirect(http.StatusTemporaryRedirect, URL)
 }
+
+func (o *Rest) Ping(c *gin.Context) {
+	err := o.shortener.PingDb()
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, "")
+		return
+	}
+
+	c.JSON(http.StatusOK, "")
+}

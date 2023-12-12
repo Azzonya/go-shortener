@@ -7,6 +7,8 @@ import (
 	"github.com/Azzonya/go-shortener/internal/logger"
 	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
 	"github.com/Azzonya/go-shortener/internal/storage"
+	"github.com/Azzonya/go-shortener/pkg"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,6 +19,7 @@ type appSt struct {
 	api       *api.Rest
 	storage   *storage.Storage
 	shortener *shortener_service.Shortener
+	db        *pgxpool.Pool
 }
 
 func StopSignal() <-chan os.Signal {
@@ -30,6 +33,8 @@ func (a *appSt) Init(conf *cfg.Conf) {
 
 	a.conf = conf
 
+	a.db, err = pkg.InitDatabasePg(conf.PgDsn)
+
 	if err = logger.Initialize(conf.LogLevel); err != nil {
 		panic(err)
 	}
@@ -39,7 +44,7 @@ func (a *appSt) Init(conf *cfg.Conf) {
 		panic(err)
 	}
 
-	a.shortener = shortener_service.New(conf.BaseURL, a.storage)
+	a.shortener = shortener_service.New(conf.BaseURL, a.storage, a.db)
 
 	a.api = api.New(a.shortener)
 }
