@@ -92,7 +92,7 @@ func (o *Rest) Redirect(c *gin.Context) {
 }
 
 func (o *Rest) Ping(c *gin.Context) {
-	err := o.shortener.PingDb()
+	err := o.shortener.PingDB()
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, "")

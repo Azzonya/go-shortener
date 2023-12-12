@@ -50,7 +50,7 @@ func (s *Shortener) GenerateShortURL() string {
 	return string(b)
 }
 
-func (s *Shortener) PingDb() error {
+func (s *Shortener) PingDB() error {
 	err := pkg.PingDatabasePg(s.db)
 
 	return err

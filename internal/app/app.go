@@ -34,6 +34,9 @@ func (a *appSt) Init(conf *cfg.Conf) {
 	a.conf = conf
 
 	a.db, err = pkg.InitDatabasePg(conf.PgDsn)
+	if err != nil {
+		panic(err)
+	}
 
 	if err = logger.Initialize(conf.LogLevel); err != nil {
 		panic(err)
