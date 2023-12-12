@@ -19,7 +19,7 @@ func InitConfig() Conf {
 	flag.StringVar(&conf.BaseURL, "b", "http://localhost:8080", "base address of the resulting shortened URL")
 	flag.StringVar(&conf.LogLevel, "l", "info", "log level")
 	flag.StringVar(&conf.FileStoragePath, "f", "/tmp/short-url-repo.json", "file path")
-	flag.StringVar(&conf.PgDsn, "d", "host=host port=port user=myuser password=xxxx dbname=mydb sslmode=disable", "database connection line")
+	flag.StringVar(&conf.PgDsn, "d", "postgresql://postgres:postgres@localhost:5432/postgres", "database connection line")
 	flag.Parse()
 
 	err := env.Parse(&conf)
