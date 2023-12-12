@@ -11,9 +11,9 @@ import (
 
 type Storage struct {
 	URLMap   map[string]string
-	file     *os.File
 	filePath string
 	lastID   int
+	useDB    bool
 }
 
 type Event struct {
@@ -23,7 +23,14 @@ type Event struct {
 }
 
 func (s *Storage) RestoreFromFile() error {
-	newDecoder := json.NewDecoder(s.file)
+	file, err := os.OpenFile(s.filePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+
+	newDecoder := json.NewDecoder(file)
 
 	s.URLMap = make(map[string]string)
 	s.lastID = 0
@@ -62,9 +69,6 @@ func (s *Storage) SyncData() {
 
 func (s *Storage) Add(key, value string) error {
 	s.URLMap[key] = value
-	if s.file == nil {
-		return nil
-	}
 	s.lastID += 1
 
 	return nil
@@ -101,23 +105,17 @@ func (s *Storage) WriteEvent(event *Event) error {
 	return writer.Flush()
 }
 
-func NewStorage(filePath string) (*Storage, error) {
-	var err error
-
+func NewStorage(filePath string, useDB bool) (*Storage, error) {
 	s := &Storage{}
 
 	s.filePath = filePath
+	s.useDB = useDB
 
-	s.file, err = os.OpenFile(s.filePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
-	if err != nil {
-		return nil, err
-	}
-
-	defer s.file.Close()
-
-	err = s.RestoreFromFile()
-	if err != nil {
-		return nil, err
+	if !s.useDB {
+		err := s.RestoreFromFile()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return s, nil

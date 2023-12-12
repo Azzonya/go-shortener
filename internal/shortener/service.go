@@ -2,35 +2,50 @@ package shortener
 
 import (
 	"fmt"
+	"github.com/Azzonya/go-shortener/internal/repo"
 	"github.com/Azzonya/go-shortener/internal/storage"
-	"github.com/Azzonya/go-shortener/pkg"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"math/rand"
 )
 
 type Shortener struct {
-	db      *pgxpool.Pool
+	repo    repo.Repo
 	storage *storage.Storage
 	baseURL string
+	UseDB   bool
 }
 
-func New(baseURL string, storage *storage.Storage, db *pgxpool.Pool) *Shortener {
+func New(baseURL string, storage *storage.Storage, repo repo.Repo, UseDB bool) *Shortener {
 	return &Shortener{
 		baseURL: baseURL,
 		storage: storage,
-		db:      db,
+		repo:    repo,
+		UseDB:   UseDB,
 	}
 }
 
 func (s *Shortener) GetOne(key string) (string, bool) {
-	URL, exist := s.storage.GetOne(key)
+	var URL string
+	var exist bool
+
+	if !s.UseDB {
+		URL, exist = s.storage.GetOne(key)
+	} else {
+		URL, exist = s.repo.URLGet(key)
+	}
+
 	return URL, exist
 }
 
 func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
+	var err error
 	shortURL := s.GenerateShortURL()
 
-	err := s.storage.Add(shortURL, originalURL)
+	if !s.UseDB {
+		err = s.storage.Add(shortURL, originalURL)
+	} else {
+		err = s.repo.URLAddNew(originalURL, shortURL)
+	}
+
 	if err != nil {
 		return "", err
 	}
@@ -51,7 +66,7 @@ func (s *Shortener) GenerateShortURL() string {
 }
 
 func (s *Shortener) PingDB() error {
-	err := pkg.PingDatabasePg(s.db)
+	err := s.repo.Ping()
 
 	return err
 }

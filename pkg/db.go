@@ -18,9 +18,3 @@ func InitDatabasePg(pgDsn string) (*pgxpool.Pool, error) {
 
 	return dbPool, nil
 }
-
-func PingDatabasePg(dbPool *pgxpool.Pool) error {
-	err := dbPool.Ping(context.Background())
-
-	return err
-}
