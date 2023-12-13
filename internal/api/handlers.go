@@ -96,7 +96,7 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 
 	var URLs []*entities.ReqURL
 
-	err := c.BindJSON(URLs)
+	err := c.BindJSON(&URLs)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Failed to read body",

@@ -75,6 +75,7 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) error {
 		}
 
 		urls[i].ShortURL = resultString
+		urls[i].OriginalURL = ""
 	}
 
 	return nil
