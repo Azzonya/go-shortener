@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -64,8 +65,9 @@ func (s *St) AddNew(originalURL, shortURL string) error {
 	query := `INSERT INTO urls (originalURL, shortURL) VALUES ($1, $2)`
 
 	err := s.db.QueryRow(context.Background(), query, originalURL, shortURL)
+
 	if err != nil {
-		return fmt.Errorf("error: db add new url line: %w", err) //
+		return errors.New("cannot insert line")
 	}
 
 	return nil
