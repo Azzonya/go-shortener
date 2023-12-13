@@ -48,11 +48,8 @@ func (s *St) URLTableInit() error {
 func (s *St) URLTableExist() bool {
 	var count int
 	err := s.db.QueryRow(context.Background(), "SELECT COUNT(*) from urls").Scan(&count)
-	if err == nil {
-		return true
-	}
 
-	return false
+	return err == nil
 }
 
 func (s *St) URLAddNew(originalURL, shortURL string) error {
