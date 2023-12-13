@@ -11,16 +11,26 @@ type St struct {
 }
 
 func New(db *pgxpool.Pool) *St {
+	s := &St{
+		db: db,
+	}
+
+	var err error
+	exist := s.URLTableExist()
+
+	if !exist {
+		err = s.URLTableInit()
+		if err != nil {
+			return nil
+		}
+	}
+
 	return &St{
 		db: db,
 	}
 }
 
 func (s *St) URLTableInit() error {
-	if err := s.URLTableExist(); err != nil {
-		return err
-	}
-
 	query := `CREATE TABLE urls (
 				id SERIAL PRIMARY KEY,
 				originalURL VARCHAR(255) NOT NULL,
@@ -35,16 +45,14 @@ func (s *St) URLTableInit() error {
 	return nil
 }
 
-func (s *St) URLTableExist() error {
+func (s *St) URLTableExist() bool {
 	var count int
-
-	query := `SELECT COUNT(*) from urls`
-	err := s.db.QueryRow(context.Background(), query).Scan(&count)
+	err := s.db.QueryRow(context.Background(), "SELECT COUNT(*) from urls").Scan(&count)
 	if err != nil {
-		return fmt.Errorf("URL table does not exist: %w", err)
+		return false
 	}
 
-	return nil
+	return true
 }
 
 func (s *St) URLAddNew(originalURL, shortURL string) error {

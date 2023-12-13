@@ -6,7 +6,7 @@ import (
 
 type Repo interface {
 	URLTableInit() error
-	URLTableExist() error
+	URLTableExist() bool
 	URLAddNew(originalURL, shortURL string) error
 	URLGet(shortURL string) (string, bool)
 
