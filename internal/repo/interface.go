@@ -8,7 +8,9 @@ type Repo interface {
 	URLTableInit() error
 	URLTableExist() bool
 	URLAddNew(originalURL, shortURL string) error
-	URLGet(shortURL string) (string, bool)
+	URLUpdate(originalURL, shortURL string) error
+	URLGetByShortURL(shortURL string) (string, bool)
+	URLGetByOriginalURL(originalURL string) (string, bool)
 
 	Ping() error
 }

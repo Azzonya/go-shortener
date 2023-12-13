@@ -5,6 +5,7 @@ import (
 	"github.com/Azzonya/go-shortener/internal/repo"
 	"github.com/Azzonya/go-shortener/internal/storage"
 	"math/rand"
+	"time"
 )
 
 type Shortener struct {
@@ -30,7 +31,7 @@ func (s *Shortener) GetOne(key string) (string, bool) {
 	if !s.UseDB {
 		URL, exist = s.storage.GetOne(key)
 	} else {
-		URL, exist = s.repo.URLGet(key)
+		URL, exist = s.repo.URLGetByShortURL(key)
 	}
 
 	return URL, exist
@@ -57,7 +58,11 @@ func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
 
 func (s *Shortener) GenerateShortURL() string {
 	const shorURLLenth = 8
+
 	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	rand.Seed(time.Now().UnixNano())
+
 	b := make([]rune, shorURLLenth)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]

@@ -53,6 +53,10 @@ func (s *St) URLTableExist() bool {
 }
 
 func (s *St) URLAddNew(originalURL, shortURL string) error {
+	if _, exist := s.URLGetByOriginalURL(originalURL); exist {
+		return s.URLUpdate(originalURL, shortURL)
+	}
+
 	query := `INSERT INTO urls (originalURL, shortURL) VALUES ($1, $2)`
 
 	_, err := s.db.Exec(context.Background(), query, originalURL, shortURL)
@@ -63,7 +67,15 @@ func (s *St) URLAddNew(originalURL, shortURL string) error {
 	return nil
 }
 
-func (s *St) URLGet(shortURL string) (string, bool) {
+func (s *St) URLUpdate(originalURL, shortURL string) error {
+	query := `UPDATE urls SET shortURL = $1 where originalURL = $2`
+
+	_, err := s.db.Exec(context.Background(), query, shortURL, originalURL)
+
+	return err
+}
+
+func (s *St) URLGetByShortURL(shortURL string) (string, bool) {
 	var url string
 
 	exist := false
@@ -71,6 +83,27 @@ func (s *St) URLGet(shortURL string) (string, bool) {
 	query := `SELECT originalURL from urls WHERE shortURL = $1`
 
 	row := s.db.QueryRow(context.Background(), query, shortURL)
+
+	err := row.Scan(&url)
+	if err != nil {
+		return "", false
+	}
+
+	if url != "" {
+		exist = true
+	}
+
+	return url, exist
+}
+
+func (s *St) URLGetByOriginalURL(originalURL string) (string, bool) {
+	var url string
+
+	exist := false
+
+	query := `SELECT shortURL from urls WHERE originalURL = $1`
+
+	row := s.db.QueryRow(context.Background(), query, originalURL)
 
 	err := row.Scan(&url)
 	if err != nil {
