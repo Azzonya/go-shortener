@@ -37,7 +37,13 @@ func (s *St) TableInit() error {
 				id SERIAL PRIMARY KEY,
 				originalURL VARCHAR(255) NOT NULL,
 				shortURL VARCHAR(255) UNIQUE NOT NULL
-				);`
+				);
+				DO $$ 
+				BEGIN 
+   	 			IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE tablename = 'urls' AND indexname = 'idx_original_url') THEN
+        			CREATE UNIQUE INDEX idx_original_url ON urls(originalURL);
+    			END IF;
+				END $$;`
 
 	_, err := s.db.Exec(context.Background(), query)
 	if err != nil {
@@ -55,13 +61,9 @@ func (s *St) TableExist() bool {
 }
 
 func (s *St) AddNew(originalURL, shortURL string) error {
-	if _, exist := s.GetByOriginalURL(originalURL); exist {
-		return s.Update(originalURL, shortURL)
-	}
-
 	query := `INSERT INTO urls (originalURL, shortURL) VALUES ($1, $2)`
 
-	_, err := s.db.Exec(context.Background(), query, originalURL, shortURL)
+	err := s.db.QueryRow(context.Background(), query, originalURL, shortURL)
 	if err != nil {
 		return fmt.Errorf("error: db add new url line: %w", err)
 	}

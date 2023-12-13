@@ -19,6 +19,7 @@ type Response struct {
 
 func (o *Rest) ShortenJSON(c *gin.Context) {
 	var err error
+	var exist bool
 
 	req := &Request{}
 	resp := Response{}
@@ -34,11 +35,14 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 
 	outputURL, err := o.shortener.ShortenAndSaveLink(req.URL)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to create short URL",
-			"error":   err.Error(),
-		})
-		return
+		outputURL, exist = o.shortener.GetOneByOriginalURL(req.URL)
+		if !exist {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "Failed to create short URL",
+				"error":   err.Error(),
+			})
+			return
+		}
 	}
 
 	resp.Result = outputURL
@@ -53,10 +57,18 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", "application/json")
-	c.Data(http.StatusCreated, "application/json", resultJSON)
+
+	if exist {
+		c.Data(http.StatusConflict, "application/json", resultJSON)
+
+	} else {
+		c.Data(http.StatusCreated, "application/json", resultJSON)
+	}
 }
 
 func (o *Rest) Shorten(c *gin.Context) {
+	var exist bool
+
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.String(http.StatusBadRequest, "Failed to read request body")
@@ -67,12 +79,20 @@ func (o *Rest) Shorten(c *gin.Context) {
 
 	outputURL, err := o.shortener.ShortenAndSaveLink(reqObj)
 	if err != nil {
-		c.String(http.StatusBadRequest, "Failed to add line to storage")
-		return
+		outputURL, exist = o.shortener.GetOneByOriginalURL(reqObj)
+		if !exist {
+			c.String(http.StatusBadRequest, "Failed to add line to storage")
+			return
+		}
 	}
 
 	c.Header("Content-Type", "text/plain")
-	c.String(http.StatusCreated, outputURL)
+	if exist {
+		c.String(http.StatusConflict, outputURL)
+
+	} else {
+		c.String(http.StatusCreated, outputURL)
+	}
 }
 
 func (o *Rest) Redirect(c *gin.Context) {
@@ -82,7 +102,7 @@ func (o *Rest) Redirect(c *gin.Context) {
 		return
 	}
 
-	URL, exist := o.shortener.GetOne(shortURL)
+	URL, exist := o.shortener.GetOneByShortURL(shortURL)
 	if !exist {
 		c.String(http.StatusBadRequest, "Failed to get original URL")
 		return

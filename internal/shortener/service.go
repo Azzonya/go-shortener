@@ -25,7 +25,7 @@ func New(baseURL string, storage *storage.Storage, repo repo.Repo, UseDB bool) *
 	}
 }
 
-func (s *Shortener) GetOne(key string) (string, bool) {
+func (s *Shortener) GetOneByShortURL(key string) (string, bool) {
 	var URL string
 	var exist bool
 
@@ -36,6 +36,14 @@ func (s *Shortener) GetOne(key string) (string, bool) {
 	}
 
 	return URL, exist
+}
+
+func (s *Shortener) GetOneByOriginalURL(url string) (string, bool) {
+	URL, exist := s.repo.GetByOriginalURL(url)
+
+	outputURL := fmt.Sprintf("%s/%s", s.baseURL, URL)
+
+	return outputURL, exist
 }
 
 func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
