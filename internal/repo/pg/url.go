@@ -3,7 +3,9 @@ package pg
 import (
 	"context"
 	"fmt"
+	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"log"
 )
 
 type St struct {
@@ -16,10 +18,10 @@ func New(db *pgxpool.Pool) *St {
 	}
 
 	var err error
-	exist := s.URLTableExist()
+	exist := s.TableExist()
 
 	if !exist {
-		err = s.URLTableInit()
+		err = s.TableInit()
 		if err != nil {
 			return nil
 		}
@@ -30,7 +32,7 @@ func New(db *pgxpool.Pool) *St {
 	}
 }
 
-func (s *St) URLTableInit() error {
+func (s *St) TableInit() error {
 	query := `CREATE TABLE urls (
 				id SERIAL PRIMARY KEY,
 				originalURL VARCHAR(255) NOT NULL,
@@ -45,16 +47,16 @@ func (s *St) URLTableInit() error {
 	return nil
 }
 
-func (s *St) URLTableExist() bool {
+func (s *St) TableExist() bool {
 	var count int
 	err := s.db.QueryRow(context.Background(), "SELECT COUNT(*) from urls").Scan(&count)
 
 	return err == nil
 }
 
-func (s *St) URLAddNew(originalURL, shortURL string) error {
-	if _, exist := s.URLGetByOriginalURL(originalURL); exist {
-		return s.URLUpdate(originalURL, shortURL)
+func (s *St) AddNew(originalURL, shortURL string) error {
+	if _, exist := s.GetByOriginalURL(originalURL); exist {
+		return s.Update(originalURL, shortURL)
 	}
 
 	query := `INSERT INTO urls (originalURL, shortURL) VALUES ($1, $2)`
@@ -67,7 +69,7 @@ func (s *St) URLAddNew(originalURL, shortURL string) error {
 	return nil
 }
 
-func (s *St) URLUpdate(originalURL, shortURL string) error {
+func (s *St) Update(originalURL, shortURL string) error {
 	query := `UPDATE urls SET shortURL = $1 where originalURL = $2`
 
 	_, err := s.db.Exec(context.Background(), query, shortURL, originalURL)
@@ -75,7 +77,7 @@ func (s *St) URLUpdate(originalURL, shortURL string) error {
 	return err
 }
 
-func (s *St) URLGetByShortURL(shortURL string) (string, bool) {
+func (s *St) GetByShortURL(shortURL string) (string, bool) {
 	var url string
 
 	exist := false
@@ -96,7 +98,7 @@ func (s *St) URLGetByShortURL(shortURL string) (string, bool) {
 	return url, exist
 }
 
-func (s *St) URLGetByOriginalURL(originalURL string) (string, bool) {
+func (s *St) GetByOriginalURL(originalURL string) (string, bool) {
 	var url string
 
 	exist := false
@@ -115,6 +117,40 @@ func (s *St) URLGetByOriginalURL(originalURL string) (string, bool) {
 	}
 
 	return url, exist
+}
+
+func (s *St) CreateShortURLs(urls []*entities.ReqURL) error {
+	ctx := context.Background()
+
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("transaction error: %w", err)
+	}
+
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			log.Printf("error rollback: %d", err)
+		}
+	}()
+
+	stmt, err := tx.Prepare(ctx, "insertURLs", "INSERT INTO urls (originalURL, shortURL) VALUES($1, $2)")
+	if err != nil {
+		return fmt.Errorf("tx query error: %w", err)
+	}
+
+	for _, v := range urls {
+		_, err := tx.Exec(ctx, stmt.Name, v.OriginalURL, v.ShortURL)
+		if err != nil {
+			return fmt.Errorf("statement exec error: %w", err)
+		}
+	}
+
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return fmt.Errorf("commit error: %w", err)
+	}
+
+	return nil
 }
 
 func (s *St) Ping() error {

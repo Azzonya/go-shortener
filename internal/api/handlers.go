@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
@@ -89,6 +90,32 @@ func (o *Rest) Redirect(c *gin.Context) {
 
 	c.Header("Location", URL)
 	c.Redirect(http.StatusTemporaryRedirect, URL)
+}
+
+func (o *Rest) ShortenURLs(c *gin.Context) {
+
+	var URLs []*entities.ReqURL
+
+	err := c.BindJSON(URLs)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to read body",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	err = o.shortener.ShortenURLs(URLs)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Shorten URLs",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.Header("Content-Type", "application/json")
+	c.JSON(http.StatusCreated, URLs)
 }
 
 func (o *Rest) Ping(c *gin.Context) {

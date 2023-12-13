@@ -2,9 +2,11 @@ package shortener
 
 import (
 	"fmt"
+	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/internal/repo"
 	"github.com/Azzonya/go-shortener/internal/storage"
 	"github.com/google/uuid"
+	"net/url"
 )
 
 type Shortener struct {
@@ -30,7 +32,7 @@ func (s *Shortener) GetOne(key string) (string, bool) {
 	if !s.UseDB {
 		URL, exist = s.storage.GetOne(key)
 	} else {
-		URL, exist = s.repo.URLGetByShortURL(key)
+		URL, exist = s.repo.GetByShortURL(key)
 	}
 
 	return URL, exist
@@ -43,7 +45,7 @@ func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
 	if !s.UseDB {
 		err = s.storage.Add(shortURL, originalURL)
 	} else {
-		err = s.repo.URLAddNew(originalURL, shortURL)
+		err = s.repo.AddNew(originalURL, shortURL)
 	}
 
 	if err != nil {
@@ -53,6 +55,29 @@ func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
 	outputURL := fmt.Sprintf("%s/%s", s.baseURL, shortURL)
 
 	return outputURL, nil
+}
+
+func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) error {
+	for i := range urls {
+		shortURL := s.GenerateShortURL()
+		urls[i].ShortURL = shortURL
+	}
+
+	err := s.repo.CreateShortURLs(urls)
+	if err != nil {
+		return err
+	}
+
+	for i, v := range urls {
+		resultString, err := url.JoinPath(s.baseURL, v.ShortURL)
+		if err != nil {
+			return err
+		}
+
+		urls[i].ShortURL = resultString
+	}
+
+	return nil
 }
 
 func (s *Shortener) GenerateShortURL() string {
