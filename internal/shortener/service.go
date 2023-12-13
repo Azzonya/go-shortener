@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"github.com/Azzonya/go-shortener/internal/repo"
 	"github.com/Azzonya/go-shortener/internal/storage"
-	"math/rand"
-	"time"
+	"github.com/google/uuid"
 )
 
 type Shortener struct {
@@ -57,17 +56,8 @@ func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
 }
 
 func (s *Shortener) GenerateShortURL() string {
-	const shorURLLenth = 8
-
-	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-	rand.Seed(time.Now().UnixNano())
-
-	b := make([]rune, shorURLLenth)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
+	newUUID := uuid.New()
+	return newUUID.String()
 }
 
 func (s *Shortener) PingDB() error {
