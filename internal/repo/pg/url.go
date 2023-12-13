@@ -65,7 +65,7 @@ func (s *St) AddNew(originalURL, shortURL string) error {
 
 	err := s.db.QueryRow(context.Background(), query, originalURL, shortURL)
 	if err != nil {
-		return fmt.Errorf("error: db add new url line: %w", err)
+		return fmt.Errorf("error: db add new url line: %w", err) //
 	}
 
 	return nil
