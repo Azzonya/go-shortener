@@ -1,17 +1,9 @@
 package main
 
 import (
-	"github.com/Azzonya/go-shortener/internal/adapters/server"
+	"github.com/Azzonya/go-shortener/internal/app"
 )
 
 func main() {
-	initConfig()
-
-	app := struct {
-		srv *server.Rest
-	}{}
-
-	app.srv = server.New()
-
-	app.srv.Start(":8080")
+	app.Start()
 }
