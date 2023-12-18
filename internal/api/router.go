@@ -7,7 +7,6 @@ import (
 	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"log"
 	"net/http"
 )
 
@@ -49,7 +48,7 @@ func (o *Rest) Start(lAddr string) {
 	go func() {
 		defer func() {
 			if rec := recover(); rec != nil {
-				log.Printf("Recovered from panic: %v", rec)
+				logger.Log.Error("Recovered from panic: %v")
 			}
 		}()
 

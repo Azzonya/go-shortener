@@ -33,9 +33,9 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 		return
 	}
 
-	outputURL, err := o.shortener.ShortenAndSaveLink(req.URL)
+	resp.Result, err = o.shortener.ShortenAndSaveLink(req.URL)
 	if err != nil {
-		outputURL, exist = o.shortener.GetOneByOriginalURL(req.URL)
+		resp.Result, exist = o.shortener.GetOneByOriginalURL(req.URL)
 		if !exist {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "Failed to create short URL",
@@ -44,8 +44,6 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 			return
 		}
 	}
-
-	resp.Result = outputURL
 
 	resultJSON, err := json.Marshal(resp)
 	if err != nil {
@@ -81,7 +79,7 @@ func (o *Rest) Shorten(c *gin.Context) {
 	if err != nil {
 		outputURL, exist = o.shortener.GetOneByOriginalURL(reqObj)
 		if !exist {
-			c.String(http.StatusBadRequest, "Failed to add line to storage")
+			c.String(http.StatusBadRequest, "Failed to add line to inmemory")
 			return
 		}
 	}
@@ -125,7 +123,7 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 		return
 	}
 
-	err = o.shortener.ShortenURLs(URLs)
+	shortenedURLs, err := o.shortener.ShortenURLs(URLs)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Shorten URLs",
@@ -135,7 +133,7 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", "application/json")
-	c.JSON(http.StatusCreated, URLs)
+	c.JSON(http.StatusCreated, shortenedURLs)
 }
 
 func (o *Rest) Ping(c *gin.Context) {
