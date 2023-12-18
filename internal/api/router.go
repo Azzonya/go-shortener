@@ -33,9 +33,11 @@ func (o *Rest) Start(lAddr string) {
 
 	r := gin.Default()
 
-	r.Use(middleware.RequestLogger(logger.Log), gin.Recovery())
-	r.Use(middleware.CompressRequest(), gin.Recovery())
-	r.Use(middleware.DecompressRequest(), gin.Recovery())
+	r.Use(
+		middleware.RequestLogger(logger.Log),
+		middleware.CompressRequest(),
+		middleware.DecompressRequest(),
+		gin.Recovery())
 
 	o.SetRouters(r)
 
@@ -73,4 +75,6 @@ func (o *Rest) SetRouters(r *gin.Engine) {
 	r.POST("/", o.Shorten)
 	r.GET("/:id", o.Redirect)
 	r.POST("/api/shorten", o.ShortenJSON)
+	r.GET("/ping", o.Ping)
+	r.POST("/api/shorten/batch", o.ShortenURLs)
 }

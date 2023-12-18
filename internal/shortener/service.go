@@ -2,31 +2,60 @@ package shortener
 
 import (
 	"fmt"
+	"github.com/Azzonya/go-shortener/internal/entities"
+	"github.com/Azzonya/go-shortener/internal/repo"
 	"github.com/Azzonya/go-shortener/internal/storage"
-	"math/rand"
+	"github.com/google/uuid"
+	"net/url"
 )
 
 type Shortener struct {
-	baseURL string
+	repo    repo.Repo
 	storage *storage.Storage
+	baseURL string
+	UseDB   bool
 }
 
-func New(baseURL string, storage *storage.Storage) *Shortener {
+func New(baseURL string, storage *storage.Storage, repo repo.Repo, UseDB bool) *Shortener {
 	return &Shortener{
 		baseURL: baseURL,
 		storage: storage,
+		repo:    repo,
+		UseDB:   UseDB,
 	}
 }
 
-func (s *Shortener) GetOne(key string) (string, bool) {
-	URL, exist := s.storage.GetOne(key)
+func (s *Shortener) GetOneByShortURL(key string) (string, bool) {
+	var URL string
+	var exist bool
+
+	if !s.UseDB {
+		URL, exist = s.storage.GetOne(key)
+	} else {
+		URL, exist = s.repo.GetByShortURL(key)
+	}
+
 	return URL, exist
 }
 
+func (s *Shortener) GetOneByOriginalURL(url string) (string, bool) {
+	URL, exist := s.repo.GetByOriginalURL(url)
+
+	outputURL := fmt.Sprintf("%s/%s", s.baseURL, URL)
+
+	return outputURL, exist
+}
+
 func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
+	var err error
 	shortURL := s.GenerateShortURL()
 
-	err := s.storage.Add(shortURL, originalURL)
+	if !s.UseDB {
+		err = s.storage.Add(shortURL, originalURL)
+	} else {
+		err = s.repo.AddNew(originalURL, shortURL)
+	}
+
 	if err != nil {
 		return "", err
 	}
@@ -36,12 +65,37 @@ func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
 	return outputURL, nil
 }
 
-func (s *Shortener) GenerateShortURL() string {
-	const shorURLLenth = 8
-	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := make([]rune, shorURLLenth)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) error {
+	for i := range urls {
+		shortURL := s.GenerateShortURL()
+		urls[i].ShortURL = shortURL
 	}
-	return string(b)
+
+	err := s.repo.CreateShortURLs(urls)
+	if err != nil {
+		return err
+	}
+
+	for i, v := range urls {
+		resultString, err := url.JoinPath(s.baseURL, v.ShortURL)
+		if err != nil {
+			return err
+		}
+
+		urls[i].ShortURL = resultString
+		urls[i].OriginalURL = ""
+	}
+
+	return nil
+}
+
+func (s *Shortener) GenerateShortURL() string {
+	newUUID := uuid.New()
+	return newUUID.String()
+}
+
+func (s *Shortener) PingDB() error {
+	err := s.repo.Ping()
+
+	return err
 }

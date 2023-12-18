@@ -1,8 +1,10 @@
 package api
 
 import (
+	"github.com/Azzonya/go-shortener/internal/repo/pg"
 	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
 	"github.com/Azzonya/go-shortener/internal/storage"
+	"github.com/Azzonya/go-shortener/pkg"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,10 +43,15 @@ func TestRest_Shorten(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			stor, err := storage.NewStorage("/tmp/short-url-db.json")
+			stor, err := storage.NewStorage("/tmp/short-url-repo.json", false)
 			require.NoError(t, err)
 
-			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor)
+			db, err := pkg.InitDatabasePg("postgresql://postgres:postgres@localhost:5432/postgres")
+			require.NoError(t, err)
+
+			repo := pg.New(db)
+
+			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor, repo, false)
 
 			r := gin.Default()
 			r.POST(tt.request, tt.rest.Shorten)
@@ -69,7 +76,7 @@ func TestRest_Shorten(t *testing.T) {
 
 			parts := strings.Split(shortURL, "/")
 
-			originalURL, exist := tt.rest.shortener.GetOne(parts[len(parts)-1])
+			originalURL, exist := tt.rest.shortener.GetOneByShortURL(parts[len(parts)-1])
 			if !exist {
 				require.Fail(t, "Expected short URL in urlMap")
 			}
@@ -109,10 +116,15 @@ func TestRest_Redirect(t *testing.T) {
 
 			testShortURL := "Abcdefgh"
 
-			stor, err := storage.NewStorage("/tmp/short-url-db.json")
+			stor, err := storage.NewStorage("/tmp/short-url-repo.json", false)
 			require.NoError(t, err)
 
-			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor)
+			db, err := pkg.InitDatabasePg("postgresql://postgres:postgres@localhost:5432/postgres")
+			require.NoError(t, err)
+
+			repo := pg.New(db)
+
+			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor, repo, false)
 
 			err = stor.Add(testShortURL, tt.want.location)
 			require.NoError(t, err)
