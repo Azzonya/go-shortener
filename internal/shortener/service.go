@@ -73,7 +73,7 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) ([]*entities.ReqURL, er
 		urls[i].ShortURL = shortURL
 
 		shortenedURLs = append(shortenedURLs, &entities.ReqURL{
-			OriginalURL: "",
+			OriginalURL: urls[i].OriginalURL,
 			ShortURL:    shortURL,
 		})
 	}
@@ -90,6 +90,7 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) ([]*entities.ReqURL, er
 		}
 
 		shortenedURLs[i].ShortURL = resultString
+		shortenedURLs[i].OriginalURL = ""
 	}
 
 	return shortenedURLs, nil
