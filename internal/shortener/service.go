@@ -70,7 +70,12 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) ([]*entities.ReqURL, er
 
 	for i := range urls {
 		shortURL := s.GenerateShortURL()
-		shortenedURLs[i].ShortURL = shortURL
+		urls[i].ShortURL = shortURL
+
+		shortenedURLs = append(shortenedURLs, &entities.ReqURL{
+			OriginalURL: "",
+			ShortURL:    shortURL,
+		})
 	}
 
 	err := s.repo.CreateShortURLs(shortenedURLs)
@@ -78,7 +83,7 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) ([]*entities.ReqURL, er
 		return nil, err
 	}
 
-	for i, v := range urls {
+	for i, v := range shortenedURLs {
 		resultString, err := url.JoinPath(s.baseURL, v.ShortURL)
 		if err != nil {
 			return nil, err
