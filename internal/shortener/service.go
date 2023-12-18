@@ -3,25 +3,25 @@ package shortener
 import (
 	"fmt"
 	"github.com/Azzonya/go-shortener/internal/entities"
+	"github.com/Azzonya/go-shortener/internal/inmemory"
 	"github.com/Azzonya/go-shortener/internal/repo"
-	"github.com/Azzonya/go-shortener/internal/storage"
 	"github.com/google/uuid"
 	"net/url"
 )
 
 type Shortener struct {
-	repo    repo.Repo
-	storage *storage.Storage
-	baseURL string
-	UseDB   bool
+	repo     repo.Repo
+	inmemory *inmemory.Storage
+	baseURL  string
+	UseDB    bool
 }
 
-func New(baseURL string, storage *storage.Storage, repo repo.Repo, UseDB bool) *Shortener {
+func New(baseURL string, inmemory *inmemory.Storage, repo repo.Repo, UseDB bool) *Shortener {
 	return &Shortener{
-		baseURL: baseURL,
-		storage: storage,
-		repo:    repo,
-		UseDB:   UseDB,
+		baseURL:  baseURL,
+		inmemory: inmemory,
+		repo:     repo,
+		UseDB:    UseDB,
 	}
 }
 
@@ -29,10 +29,10 @@ func (s *Shortener) GetOneByShortURL(key string) (string, bool) {
 	var URL string
 	var exist bool
 
-	if !s.UseDB {
-		URL, exist = s.storage.GetOne(key)
-	} else {
+	if s.UseDB {
 		URL, exist = s.repo.GetByShortURL(key)
+	} else {
+		URL, exist = s.inmemory.GetOne(key)
 	}
 
 	return URL, exist
@@ -51,7 +51,7 @@ func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
 	shortURL := s.GenerateShortURL()
 
 	if !s.UseDB {
-		err = s.storage.Add(shortURL, originalURL)
+		err = s.inmemory.Add(shortURL, originalURL)
 	} else {
 		err = s.repo.AddNew(originalURL, shortURL)
 	}
@@ -65,28 +65,29 @@ func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
 	return outputURL, nil
 }
 
-func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) error {
+func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) ([]*entities.ReqURL, error) {
+	var shortenedURLs []*entities.ReqURL
+
 	for i := range urls {
 		shortURL := s.GenerateShortURL()
-		urls[i].ShortURL = shortURL
+		shortenedURLs[i].ShortURL = shortURL
 	}
 
-	err := s.repo.CreateShortURLs(urls)
+	err := s.repo.CreateShortURLs(shortenedURLs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for i, v := range urls {
 		resultString, err := url.JoinPath(s.baseURL, v.ShortURL)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		urls[i].ShortURL = resultString
-		urls[i].OriginalURL = ""
+		shortenedURLs[i].ShortURL = resultString
 	}
 
-	return nil
+	return shortenedURLs, nil
 }
 
 func (s *Shortener) GenerateShortURL() string {

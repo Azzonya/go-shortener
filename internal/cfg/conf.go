@@ -29,3 +29,7 @@ func InitConfig() Conf {
 
 	return conf
 }
+
+func (c *Conf) UseDatabase() bool {
+	return !(c.PgDsn == "")
+}

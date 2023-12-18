@@ -18,9 +18,8 @@ func New(db *pgxpool.Pool) *St {
 	}
 
 	var err error
-	exist := s.TableExist()
 
-	if !exist {
+	if !s.TableExist() {
 		err = s.TableInit()
 		if err != nil {
 			return nil
