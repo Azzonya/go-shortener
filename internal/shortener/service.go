@@ -49,7 +49,15 @@ func (s *Shortener) GetOneByOriginalURL(url string) (string, bool) {
 }
 
 func (s *Shortener) ListAll() ([]*entities.ReqListAll, error) {
-	return s.repo.ListAll(s.UserID)
+	list, err := s.repo.ListAll(s.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range list {
+		v.ShortURL = fmt.Sprintf("%s/%s", s.baseURL, v.ShortURL)
+	}
+	return list, nil
 }
 
 func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
