@@ -33,6 +33,15 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 		return
 	}
 
+	o.shortener.UserID, err = c.Cookie("userID")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Failed to get cookie - userID",
+			"error":   err.Error(),
+		})
+		return
+	}
+
 	resp.Result, err = o.shortener.ShortenAndSaveLink(req.URL)
 	if err != nil {
 		resp.Result, exist = o.shortener.GetOneByOriginalURL(req.URL)
@@ -70,6 +79,12 @@ func (o *Rest) Shorten(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.String(http.StatusBadRequest, "Failed to read request body")
+		return
+	}
+
+	o.shortener.UserID, err = c.Cookie("userID")
+	if err != nil {
+		c.String(http.StatusUnauthorized, "Failed to get cookie - userID")
 		return
 	}
 
@@ -123,6 +138,15 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 		return
 	}
 
+	o.shortener.UserID, err = c.Cookie("userID")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Failed to get cookie - userID",
+			"error":   err.Error(),
+		})
+		return
+	}
+
 	shortenedURLs, err := o.shortener.ShortenURLs(URLs)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -136,13 +160,35 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 	c.JSON(http.StatusCreated, shortenedURLs)
 }
 
-func (o *Rest) Ping(c *gin.Context) {
-	err := o.shortener.PingDB()
+func (o *Rest) ListAll(c *gin.Context) {
+	var err error
 
+	o.shortener.UserID, err = c.Cookie("userID")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, "")
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Failed to get cookie - userID",
+			"error":   err.Error(),
+		})
 		return
 	}
 
+	result, err := o.shortener.ListAll()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to get cookie - userID",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.Header("Content-Type", "application/json")
+	if len(result) == 0 {
+		c.JSON(http.StatusNoContent, result)
+	} else {
+		c.JSON(http.StatusCreated, result)
+	}
+}
+
+func (o *Rest) Ping(c *gin.Context) {
 	c.JSON(http.StatusOK, "")
 }

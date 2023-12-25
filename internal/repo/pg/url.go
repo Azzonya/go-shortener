@@ -35,7 +35,8 @@ func (s *St) TableInit() error {
 	query := `CREATE TABLE urls (
 				id SERIAL PRIMARY KEY,
 				originalURL VARCHAR(255) NOT NULL,
-				shortURL VARCHAR(255) UNIQUE NOT NULL
+				shortURL VARCHAR(255) UNIQUE NOT NULL,
+                userID VARCHAR(255) NOT NULL  
 				);
 				DO $$ 
 				BEGIN 
@@ -59,10 +60,10 @@ func (s *St) TableExist() bool {
 	return err == nil
 }
 
-func (s *St) AddNew(originalURL, shortURL string) error {
-	query := `INSERT INTO urls (originalURL, shortURL) VALUES ($1, $2)`
+func (s *St) AddNew(originalURL, shortURL, userID string) error {
+	query := `INSERT INTO urls (originalURL, shortURL, userID) VALUES ($1, $2, $3)`
 
-	_, err := s.db.Exec(context.Background(), query, originalURL, shortURL)
+	_, err := s.db.Exec(context.Background(), query, originalURL, shortURL, userID)
 
 	if err != nil {
 		return err
@@ -121,7 +122,30 @@ func (s *St) GetByOriginalURL(originalURL string) (string, bool) {
 	return url, exist
 }
 
-func (s *St) CreateShortURLs(urls []*entities.ReqURL) error {
+func (s *St) ListAll(userID string) ([]*entities.ReqListAll, error) {
+	result := []*entities.ReqListAll{}
+	query := `SELECT originalurl, shortURL from urls WHERE userID = $1`
+
+	rows, err := s.db.Query(context.Background(), query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		URL := entities.ReqListAll{}
+		err = rows.Scan(&URL.OriginalURL, &URL.ShortURL)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, &URL)
+	}
+
+	return result, nil
+}
+
+func (s *St) CreateShortURLs(urls []*entities.ReqURL, userID string) error {
 	ctx := context.Background()
 
 	tx, err := s.db.Begin(ctx)
@@ -135,13 +159,13 @@ func (s *St) CreateShortURLs(urls []*entities.ReqURL) error {
 		}
 	}()
 
-	stmt, err := tx.Prepare(ctx, "insertURLs", "INSERT INTO urls (originalURL, shortURL) VALUES($1, $2)")
+	stmt, err := tx.Prepare(ctx, "insertURLs", "INSERT INTO urls (originalURL, shortURL, userID) VALUES($1, $2, $3)")
 	if err != nil {
 		return fmt.Errorf("tx query error: %w", err)
 	}
 
 	for _, v := range urls {
-		_, err := tx.Exec(ctx, stmt.Name, v.OriginalURL, v.ShortURL)
+		_, err := tx.Exec(ctx, stmt.Name, v.OriginalURL, v.ShortURL, userID)
 		if err != nil {
 			return fmt.Errorf("statement exec error: %w", err)
 		}

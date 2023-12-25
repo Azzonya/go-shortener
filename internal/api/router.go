@@ -76,4 +76,5 @@ func (o *Rest) SetRouters(r *gin.Engine) {
 	r.POST("/api/shorten", o.ShortenJSON)
 	r.GET("/ping", o.Ping)
 	r.POST("/api/shorten/batch", o.ShortenURLs)
+	r.GET("/api/user/urls", o.ListAll)
 }

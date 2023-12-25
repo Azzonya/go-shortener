@@ -14,13 +14,15 @@ type Shortener struct {
 	inmemory *inmemory.Storage
 	baseURL  string
 	UseDB    bool
+	UserID   string
 }
 
-func New(baseURL string, inmemory *inmemory.Storage, repo repo.Repo, UseDB bool) *Shortener {
+func New(baseURL string, inmemory *inmemory.Storage, repo repo.Repo, UserID string, UseDB bool) *Shortener {
 	return &Shortener{
 		baseURL:  baseURL,
 		inmemory: inmemory,
 		repo:     repo,
+		UserID:   UserID,
 		UseDB:    UseDB,
 	}
 }
@@ -46,6 +48,10 @@ func (s *Shortener) GetOneByOriginalURL(url string) (string, bool) {
 	return outputURL, exist
 }
 
+func (s *Shortener) ListAll() ([]*entities.ReqListAll, error) {
+	return s.repo.ListAll(s.UserID)
+}
+
 func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
 	var err error
 	shortURL := s.GenerateShortURL()
@@ -53,7 +59,7 @@ func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
 	if !s.UseDB {
 		err = s.inmemory.Add(shortURL, originalURL)
 	} else {
-		err = s.repo.AddNew(originalURL, shortURL)
+		err = s.repo.AddNew(originalURL, shortURL, s.UserID)
 	}
 
 	if err != nil {
@@ -79,7 +85,7 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) ([]*entities.ReqURL, er
 		})
 	}
 
-	err := s.repo.CreateShortURLs(shortenedURLs)
+	err := s.repo.CreateShortURLs(shortenedURLs, s.UserID)
 	if err != nil {
 		return nil, err
 	}

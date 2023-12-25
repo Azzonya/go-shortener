@@ -56,7 +56,7 @@ func (a *appSt) Init(conf *cfg.Conf) {
 		panic(err)
 	}
 
-	a.shortener = shortener_service.New(conf.BaseURL, a.storage, a.repo, useDB)
+	a.shortener = shortener_service.New(conf.BaseURL, a.storage, a.repo, "", useDB)
 
 	a.api = api.New(a.shortener)
 }
