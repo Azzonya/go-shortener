@@ -164,15 +164,6 @@ func (o *Rest) ListAll(c *gin.Context) {
 	var err error
 
 	o.shortener.UserID, _ = c.Cookie("userID")
-	//if err != nil {
-	//	c.JSON(http.StatusUnauthorized, gin.H{
-	//		"message": "Failed to get cookie - userID",
-	//		"error":   err.Error(),
-	//	})
-	//	return
-	//}
-
-	result, err := o.shortener.ListAll()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Failed to get cookie - userID",
@@ -181,21 +172,22 @@ func (o *Rest) ListAll(c *gin.Context) {
 		return
 	}
 
-	respJSON, err := json.Marshal(result)
+	result, err := o.shortener.ListAll()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to marshal",
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get urls",
 			"error":   err.Error(),
 		})
 		return
 	}
 
-	c.Header("Content-Type", "application/json")
 	if len(result) == 0 {
-		c.Data(http.StatusNoContent, "application/json", respJSON)
-	} else {
-		c.Data(http.StatusOK, "application/json", respJSON)
+		c.JSON(http.StatusNoContent, nil)
+		return
 	}
+
+	c.Header("Content-Type", "application/json")
+	c.JSON(http.StatusOK, result)
 }
 
 func (o *Rest) Ping(c *gin.Context) {
