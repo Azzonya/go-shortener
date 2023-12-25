@@ -165,7 +165,7 @@ func (o *Rest) ListAll(c *gin.Context) {
 
 	o.shortener.UserID, err = c.Cookie("userID")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "Failed to get cookie - userID",
 			"error":   err.Error(),
 		})
