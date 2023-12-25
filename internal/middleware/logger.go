@@ -20,6 +20,7 @@ func RequestLogger(logger *zap.Logger) gin.HandlerFunc {
 			zap.String("method", c.Request.Method),
 			zap.String("path1", c.Request.URL.Path),
 			zap.Duration("duration2", duration),
+			zap.Any("cookie", c.Request.Cookies()),
 		)
 
 		logger.Info("Response",
