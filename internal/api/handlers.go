@@ -185,7 +185,7 @@ func (o *Rest) ListAll(c *gin.Context) {
 	if len(result) == 0 {
 		c.JSON(http.StatusNoContent, result)
 	} else {
-		c.JSON(http.StatusCreated, result)
+		c.JSON(http.StatusOK, result)
 	}
 }
 
