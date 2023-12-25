@@ -163,7 +163,7 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 func (o *Rest) ListAll(c *gin.Context) {
 	var err error
 
-	o.shortener.UserID, _ = c.Cookie("userID")
+	o.shortener.UserID, err = c.Cookie("userID")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Failed to get cookie - userID",
