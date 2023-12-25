@@ -57,6 +57,11 @@ func TestRest_Shorten(t *testing.T) {
 			r.POST(tt.request, tt.rest.Shorten)
 
 			request := httptest.NewRequest(tt.requestMethod, tt.request, strings.NewReader(tt.want.testURL))
+			request.AddCookie(&http.Cookie{
+				Name:     "userID",
+				Value:    "1",
+				HttpOnly: false,
+			})
 
 			w := httptest.NewRecorder()
 			r.ServeHTTP(w, request)
@@ -130,6 +135,11 @@ func TestRest_Redirect(t *testing.T) {
 			require.NoError(t, err)
 
 			request := httptest.NewRequest(tt.requestMethod, "/"+testShortURL, nil)
+			request.AddCookie(&http.Cookie{
+				Name:     "userID",
+				Value:    "1",
+				HttpOnly: false,
+			})
 
 			w := httptest.NewRecorder()
 			r.ServeHTTP(w, request)
