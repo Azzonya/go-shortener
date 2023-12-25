@@ -33,7 +33,7 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 		return
 	}
 
-	o.shortener.UserID, err = c.Cookie("userID")
+	o.shortener.UserID, _ = c.Cookie("userID")
 	//if err != nil {
 	//	c.JSON(http.StatusUnauthorized, gin.H{
 	//		"message": "Failed to get cookie - userID",
@@ -82,7 +82,7 @@ func (o *Rest) Shorten(c *gin.Context) {
 		return
 	}
 
-	o.shortener.UserID, err = c.Cookie("userID")
+	o.shortener.UserID, _ = c.Cookie("userID")
 	//if err != nil {
 	//	c.String(http.StatusUnauthorized, "Failed to get cookie - userID")
 	//	return
@@ -138,7 +138,7 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 		return
 	}
 
-	o.shortener.UserID, err = c.Cookie("userID")
+	o.shortener.UserID, _ = c.Cookie("userID")
 	//if err != nil {
 	//	c.JSON(http.StatusUnauthorized, gin.H{
 	//		"message": "Failed to get cookie - userID",
