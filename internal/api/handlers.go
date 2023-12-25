@@ -181,11 +181,20 @@ func (o *Rest) ListAll(c *gin.Context) {
 		return
 	}
 
+	respJSON, err := json.Marshal(result)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to marshal",
+			"error":   err.Error(),
+		})
+		return
+	}
+
 	c.Header("Content-Type", "application/json")
 	if len(result) == 0 {
-		c.JSON(http.StatusNoContent, result)
+		c.Data(http.StatusNoContent, "application/json", respJSON)
 	} else {
-		c.JSON(http.StatusOK, result)
+		c.Data(http.StatusOK, "application/json", respJSON)
 	}
 }
 
