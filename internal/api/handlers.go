@@ -163,14 +163,14 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 func (o *Rest) ListAll(c *gin.Context) {
 	var err error
 
-	o.shortener.UserID, err = c.Cookie("userID")
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Failed to get cookie - userID",
-			"error":   err.Error(),
-		})
-		return
-	}
+	o.shortener.UserID, _ = c.Cookie("userID")
+	//if err != nil {
+	//	c.JSON(http.StatusUnauthorized, gin.H{
+	//		"message": "Failed to get cookie - userID",
+	//		"error":   err.Error(),
+	//	})
+	//	return
+	//}
 
 	result, err := o.shortener.ListAll()
 	if err != nil {
