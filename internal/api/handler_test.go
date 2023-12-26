@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"github.com/Azzonya/go-shortener/internal/inmemory"
 	"github.com/Azzonya/go-shortener/internal/repo/pg"
 	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
@@ -69,6 +70,8 @@ func TestRest_Shorten(t *testing.T) {
 
 			result := w.Result()
 
+			s, _ := io.ReadAll(result.Body)
+			fmt.Println(s)
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
 

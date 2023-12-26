@@ -35,14 +35,14 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 		return
 	}
 
-	user, ok := session.GetUserFromContext(c.Request.Context())
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to get user",
-			"error":   errors.New("middleware did not provide user context").Error(),
-		})
-		return
-	}
+	user, _ := session.GetUserFromContext(c.Request.Context())
+	//if !ok {
+	//	c.JSON(http.StatusBadRequest, gin.H{
+	//		"message": "Failed to get user",
+	//		"error":   errors.New("middleware did not provide user context").Error(),
+	//	})
+	//	return
+	//}
 	o.shortener.UserID = user.ID
 
 	resp.Result, err = o.shortener.ShortenAndSaveLink(req.URL)
@@ -85,11 +85,11 @@ func (o *Rest) Shorten(c *gin.Context) {
 		return
 	}
 
-	user, ok := session.GetUserFromContext(c.Request.Context())
-	if !ok {
-		c.String(http.StatusBadRequest, "middleware did not provide user context")
-		return
-	}
+	user, _ := session.GetUserFromContext(c.Request.Context())
+	//if !ok {
+	//	c.String(http.StatusBadRequest, "middleware did not provide user context")
+	//	return
+	//}
 	o.shortener.UserID = user.ID
 
 	reqObj := strings.TrimSpace(string(body))
@@ -142,14 +142,14 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 		return
 	}
 
-	user, ok := session.GetUserFromContext(c.Request.Context())
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to read body",
-			"error":   errors.New("middleware did not provide user context").Error(),
-		})
-		return
-	}
+	user, _ := session.GetUserFromContext(c.Request.Context())
+	//if !ok {
+	//	c.JSON(http.StatusBadRequest, gin.H{
+	//		"message": "Failed to read body",
+	//		"error":   errors.New("middleware did not provide user context").Error(),
+	//	})
+	//	return
+	//}
 	o.shortener.UserID = user.ID
 
 	shortenedURLs, err := o.shortener.ShortenURLs(URLs)
