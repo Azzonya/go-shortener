@@ -156,8 +156,12 @@ func (o *Rest) ListAll(c *gin.Context) {
 	var err error
 
 	user, ok := session.GetUserFromContext(c.Request.Context())
-	if ok {
-		o.shortener.UserID = user.ID
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get user",
+			"error":   err.Error(),
+		})
+		return
 	}
 
 	if user.IsNew() {
@@ -167,6 +171,8 @@ func (o *Rest) ListAll(c *gin.Context) {
 		})
 		return
 	}
+
+	o.shortener.UserID = user.ID
 
 	result, err := o.shortener.ListAll()
 	if err != nil {
