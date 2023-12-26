@@ -2,7 +2,9 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/Azzonya/go-shortener/internal/entities"
+	"github.com/Azzonya/go-shortener/internal/session"
 	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
@@ -33,14 +35,12 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 		return
 	}
 
-	o.shortener.UserID, _ = c.Cookie("userID")
-	//if err != nil {
-	//	c.JSON(http.StatusUnauthorized, gin.H{
-	//		"message": "Failed to get cookie - userID",
-	//		"error":   err.Error(),
-	//	})
-	//	return
-	//}
+	user, ok := session.GetUserFromContext(c.Request.Context())
+	if !ok {
+		err = errors.New("middleware did not provide user context")
+		return
+	}
+	o.shortener.UserID = user.ID
 
 	resp.Result, err = o.shortener.ShortenAndSaveLink(req.URL)
 	if err != nil {
@@ -82,11 +82,12 @@ func (o *Rest) Shorten(c *gin.Context) {
 		return
 	}
 
-	o.shortener.UserID, _ = c.Cookie("userID")
-	//if err != nil {
-	//	c.String(http.StatusUnauthorized, "Failed to get cookie - userID")
-	//	return
-	//}
+	user, ok := session.GetUserFromContext(c.Request.Context())
+	if !ok {
+		err = errors.New("middleware did not provide user context")
+		return
+	}
+	o.shortener.UserID = user.ID
 
 	reqObj := strings.TrimSpace(string(body))
 
@@ -138,14 +139,12 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 		return
 	}
 
-	o.shortener.UserID, _ = c.Cookie("userID")
-	//if err != nil {
-	//	c.JSON(http.StatusUnauthorized, gin.H{
-	//		"message": "Failed to get cookie - userID",
-	//		"error":   err.Error(),
-	//	})
-	//	return
-	//}
+	user, ok := session.GetUserFromContext(c.Request.Context())
+	if !ok {
+		err = errors.New("middleware did not provide user context")
+		return
+	}
+	o.shortener.UserID = user.ID
 
 	shortenedURLs, err := o.shortener.ShortenURLs(URLs)
 	if err != nil {
@@ -163,14 +162,12 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 func (o *Rest) ListAll(c *gin.Context) {
 	var err error
 
-	o.shortener.UserID, err = c.Cookie("userID")
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Failed to get cookie - userID",
-			"error":   err.Error(),
-		})
+	user, ok := session.GetUserFromContext(c.Request.Context())
+	if !ok {
+		err = errors.New("middleware did not provide user context")
 		return
 	}
+	o.shortener.UserID = user.ID
 
 	result, err := o.shortener.ListAll()
 	if err != nil {

@@ -58,7 +58,7 @@ func (a *appSt) Init(conf *cfg.Conf) {
 
 	a.shortener = shortener_service.New(conf.BaseURL, a.storage, a.repo, "", useDB)
 
-	a.api = api.New(a.shortener)
+	a.api = api.New(a.shortener, conf.JWTSecret)
 }
 
 func (a *appSt) Start() {

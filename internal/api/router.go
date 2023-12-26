@@ -15,13 +15,15 @@ type Rest struct {
 	shortener *shortener_service.Shortener
 
 	ErrorChan chan error
+	jwtSecret string
 }
 
-func New(shortener *shortener_service.Shortener) *Rest {
+func New(shortener *shortener_service.Shortener, jwtSecret string) *Rest {
 	return &Rest{
 		shortener: shortener,
 
 		ErrorChan: make(chan error, 1),
+		jwtSecret: jwtSecret,
 	}
 }
 
@@ -36,6 +38,7 @@ func (o *Rest) Start(lAddr string) {
 		middleware.RequestLogger(logger.Log),
 		middleware.CompressRequest(),
 		middleware.DecompressRequest(),
+		middleware.AuthMiddleware(o.jwtSecret),
 		gin.Recovery())
 
 	o.SetRouters(r)
