@@ -37,7 +37,10 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 
 	user, ok := session.GetUserFromContext(c.Request.Context())
 	if !ok {
-		err = errors.New("middleware did not provide user context")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to get user",
+			"error":   errors.New("middleware did not provide user context").Error(),
+		})
 		return
 	}
 	o.shortener.UserID = user.ID
@@ -84,7 +87,7 @@ func (o *Rest) Shorten(c *gin.Context) {
 
 	user, ok := session.GetUserFromContext(c.Request.Context())
 	if !ok {
-		err = errors.New("middleware did not provide user context")
+		c.String(http.StatusBadRequest, "middleware did not provide user context")
 		return
 	}
 	o.shortener.UserID = user.ID
@@ -141,7 +144,10 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 
 	user, ok := session.GetUserFromContext(c.Request.Context())
 	if !ok {
-		err = errors.New("middleware did not provide user context")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to read body",
+			"error":   errors.New("middleware did not provide user context").Error(),
+		})
 		return
 	}
 	o.shortener.UserID = user.ID
@@ -164,7 +170,10 @@ func (o *Rest) ListAll(c *gin.Context) {
 
 	user, ok := session.GetUserFromContext(c.Request.Context())
 	if !ok {
-		err = errors.New("middleware did not provide user context")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get urls",
+			"error":   errors.New("middleware did not provide user context").Error(),
+		})
 		return
 	}
 	o.shortener.UserID = user.ID

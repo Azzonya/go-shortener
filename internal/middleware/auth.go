@@ -31,9 +31,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			}
 
 			c.Header("Set-Cookie", sessionCookie.String())
-
-			c.Request.WithContext(session.SetUserContext(c.Request.Context(), u))
-			return
 		}
+		c.Request = c.Request.WithContext(session.SetUserContext(c.Request.Context(), u))
 	}
 }
