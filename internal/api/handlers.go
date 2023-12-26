@@ -160,7 +160,7 @@ func (o *Rest) ListAll(c *gin.Context) {
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to get user",
-			"error":   err.Error(),
+			"error":   errors.New("failed to get user from context").Error(),
 		})
 		return
 	}
