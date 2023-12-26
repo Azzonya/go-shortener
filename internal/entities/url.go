@@ -6,6 +6,11 @@ type ReqURL struct {
 	ShortURL    string `json:"short_url"`
 }
 
+type ReqListAll struct {
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
+}
+
 type ReqURLs struct {
 	urls *ReqURL
 }

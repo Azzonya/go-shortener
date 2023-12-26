@@ -1,9 +1,9 @@
 package api
 
 import (
+	"github.com/Azzonya/go-shortener/internal/inmemory"
 	"github.com/Azzonya/go-shortener/internal/repo/pg"
 	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
-	"github.com/Azzonya/go-shortener/internal/storage"
 	"github.com/Azzonya/go-shortener/pkg"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -43,7 +43,7 @@ func TestRest_Shorten(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			stor, err := storage.NewStorage("/tmp/short-url-repo.json", false)
+			stor, err := inmemory.NewStorage("/tmp/short-url-repo.json", false)
 			require.NoError(t, err)
 
 			db, err := pkg.InitDatabasePg("postgresql://postgres:postgres@localhost:5432/postgres")
@@ -51,7 +51,7 @@ func TestRest_Shorten(t *testing.T) {
 
 			repo := pg.New(db)
 
-			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor, repo, false)
+			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor, repo, "", false)
 
 			r := gin.Default()
 			r.POST(tt.request, tt.rest.Shorten)
@@ -116,7 +116,7 @@ func TestRest_Redirect(t *testing.T) {
 
 			testShortURL := "Abcdefgh"
 
-			stor, err := storage.NewStorage("/tmp/short-url-repo.json", false)
+			stor, err := inmemory.NewStorage("/tmp/short-url-repo.json", false)
 			require.NoError(t, err)
 
 			db, err := pkg.InitDatabasePg("postgresql://postgres:postgres@localhost:5432/postgres")
@@ -124,7 +124,7 @@ func TestRest_Redirect(t *testing.T) {
 
 			repo := pg.New(db)
 
-			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor, repo, false)
+			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor, repo, "", false)
 
 			err = stor.Add(testShortURL, tt.want.location)
 			require.NoError(t, err)

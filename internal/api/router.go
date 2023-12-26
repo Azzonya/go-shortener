@@ -7,7 +7,6 @@ import (
 	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"log"
 	"net/http"
 )
 
@@ -16,13 +15,15 @@ type Rest struct {
 	shortener *shortener_service.Shortener
 
 	ErrorChan chan error
+	jwtSecret string
 }
 
-func New(shortener *shortener_service.Shortener) *Rest {
+func New(shortener *shortener_service.Shortener, jwtSecret string) *Rest {
 	return &Rest{
 		shortener: shortener,
 
 		ErrorChan: make(chan error, 1),
+		jwtSecret: jwtSecret,
 	}
 }
 
@@ -37,6 +38,7 @@ func (o *Rest) Start(lAddr string) {
 		middleware.RequestLogger(logger.Log),
 		middleware.CompressRequest(),
 		middleware.DecompressRequest(),
+		middleware.AuthMiddleware(o.jwtSecret),
 		gin.Recovery())
 
 	o.SetRouters(r)
@@ -49,7 +51,7 @@ func (o *Rest) Start(lAddr string) {
 	go func() {
 		defer func() {
 			if rec := recover(); rec != nil {
-				log.Printf("Recovered from panic: %v", rec)
+				logger.Log.Error("Recovered from panic: %v")
 			}
 		}()
 
@@ -77,4 +79,5 @@ func (o *Rest) SetRouters(r *gin.Engine) {
 	r.POST("/api/shorten", o.ShortenJSON)
 	r.GET("/ping", o.Ping)
 	r.POST("/api/shorten/batch", o.ShortenURLs)
+	r.GET("/api/user/urls", o.ListAll)
 }
