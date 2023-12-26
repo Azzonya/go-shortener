@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/internal/session"
 	"github.com/gin-gonic/gin"
@@ -35,15 +34,10 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 		return
 	}
 
-	user, _ := session.GetUserFromContext(c.Request.Context())
-	//if !ok {
-	//	c.JSON(http.StatusBadRequest, gin.H{
-	//		"message": "Failed to get user",
-	//		"error":   errors.New("middleware did not provide user context").Error(),
-	//	})
-	//	return
-	//}
-	o.shortener.UserID = user.ID
+	user, ok := session.GetUserFromContext(c.Request.Context())
+	if ok {
+		o.shortener.UserID = user.ID
+	}
 
 	resp.Result, err = o.shortener.ShortenAndSaveLink(req.URL)
 	if err != nil {
@@ -85,12 +79,10 @@ func (o *Rest) Shorten(c *gin.Context) {
 		return
 	}
 
-	user, _ := session.GetUserFromContext(c.Request.Context())
-	//if !ok {
-	//	c.String(http.StatusBadRequest, "middleware did not provide user context")
-	//	return
-	//}
-	o.shortener.UserID = user.ID
+	user, ok := session.GetUserFromContext(c.Request.Context())
+	if ok {
+		o.shortener.UserID = user.ID
+	}
 
 	reqObj := strings.TrimSpace(string(body))
 
@@ -142,15 +134,10 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 		return
 	}
 
-	user, _ := session.GetUserFromContext(c.Request.Context())
-	//if !ok {
-	//	c.JSON(http.StatusBadRequest, gin.H{
-	//		"message": "Failed to read body",
-	//		"error":   errors.New("middleware did not provide user context").Error(),
-	//	})
-	//	return
-	//}
-	o.shortener.UserID = user.ID
+	user, ok := session.GetUserFromContext(c.Request.Context())
+	if ok {
+		o.shortener.UserID = user.ID
+	}
 
 	shortenedURLs, err := o.shortener.ShortenURLs(URLs)
 	if err != nil {
@@ -169,14 +156,9 @@ func (o *Rest) ListAll(c *gin.Context) {
 	var err error
 
 	user, ok := session.GetUserFromContext(c.Request.Context())
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to get urls",
-			"error":   errors.New("middleware did not provide user context").Error(),
-		})
-		return
+	if ok {
+		o.shortener.UserID = user.ID
 	}
-	o.shortener.UserID = user.ID
 
 	result, err := o.shortener.ListAll()
 	if err != nil {
