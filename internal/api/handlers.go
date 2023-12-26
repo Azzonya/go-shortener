@@ -160,6 +160,14 @@ func (o *Rest) ListAll(c *gin.Context) {
 		o.shortener.UserID = user.ID
 	}
 
+	if user.IsNew() {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "no cookie",
+			"error":   err.Error(),
+		})
+		return
+	}
+
 	result, err := o.shortener.ListAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
