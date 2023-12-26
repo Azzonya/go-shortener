@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"github.com/Azzonya/go-shortener/internal/auth"
 	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/session"
@@ -15,6 +16,12 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		authorizer := auth.New(jwtSecret)
 		u, err := authorizer.GetUserFromCookie(c)
 		if err != nil {
+			if errors.Is(err, http.ErrNoCookie) {
+				logger.Log.Debug("no cookie", zap.Error(err))
+				c.AbortWithStatus(http.StatusUnauthorized)
+				return
+			}
+
 			u, err = user.New()
 			if err != nil {
 				// we're helpless here
