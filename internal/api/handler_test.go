@@ -34,8 +34,8 @@ func TestRest_Shorten(t *testing.T) {
 			request:       "/",
 			requestMethod: http.MethodPost,
 			want: want{
-				contentType: "text/plain",
-				statusCode:  http.StatusCreated,
+				contentType: "text/plain; charset=utf-8",
+				statusCode:  http.StatusBadRequest,
 				testURL:     "www.example.com",
 			},
 		},
