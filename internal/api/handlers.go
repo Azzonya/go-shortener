@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/internal/session"
 	"github.com/gin-gonic/gin"
@@ -167,7 +168,7 @@ func (o *Rest) ListAll(c *gin.Context) {
 	if user.IsNew() {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "no cookie",
-			"error":   err.Error(),
+			"error":   errors.New("no authorized").Error(),
 		})
 		return
 	}
