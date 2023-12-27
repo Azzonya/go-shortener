@@ -116,6 +116,9 @@ func (s *Shortener) DeleteURLs(urls []string) error {
 }
 
 func (s *Shortener) IsDeleted(shortURL string) bool {
+	if !s.UseDB {
+		return false
+	}
 	return s.repo.URLDeleted(shortURL)
 }
 
