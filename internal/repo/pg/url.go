@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Azzonya/go-shortener/internal/entities"
+	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
@@ -188,9 +189,13 @@ func (s *St) DeleteURLs(urls []string, userID string) error {
 		batch.Queue("UPDATE urls SET deleted = true WHERE shorturl = $1 AND userid = $2", data, userID)
 	}
 
-	_ = s.db.SendBatch(context.Background(), batch)
+	bRes := s.db.SendBatch(context.Background(), batch)
+	err := bRes.Close()
+	if err != nil {
+		logger.Log.Error(err.Error())
+	}
 
-	return nil
+	return err
 }
 
 func (s *St) URLDeleted(shortURL string) bool {
