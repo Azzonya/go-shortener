@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Azzonya/go-shortener/internal/entities"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 )
@@ -36,7 +37,8 @@ func (s *St) TableInit() error {
 				id SERIAL PRIMARY KEY,
 				originalURL VARCHAR(255) NOT NULL,
 				shortURL VARCHAR(255) UNIQUE NOT NULL,
-                userID VARCHAR(255) NOT NULL  
+                userID VARCHAR(255) NOT NULL,
+                deleted BOOLEAN default false 
 				);
 				DO $$ 
 				BEGIN 
@@ -177,6 +179,32 @@ func (s *St) CreateShortURLs(urls []*entities.ReqURL, userID string) error {
 	}
 
 	return nil
+}
+
+func (s *St) DeleteURLs(urls []string, userID string) error {
+	batch := &pgx.Batch{}
+
+	for _, data := range urls {
+		batch.Queue("UPDATE urls SET deleted = true WHERE shorturl = $1 AND userid = $2", data, userID)
+	}
+
+	_ = s.db.SendBatch(context.Background(), batch)
+
+	return nil
+}
+
+func (s *St) URLDeleted(shortURL string) bool {
+	deleted := false
+	query := `SELECT deleted from urls WHERE shortURL = $1`
+
+	row := s.db.QueryRow(context.Background(), query, shortURL)
+
+	err := row.Scan(&deleted)
+	if err != nil {
+		return false
+	}
+
+	return deleted
 }
 
 func (s *St) Ping() error {

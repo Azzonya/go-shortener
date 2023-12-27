@@ -80,4 +80,5 @@ func (o *Rest) SetRouters(r *gin.Engine) {
 	r.GET("/ping", o.Ping)
 	r.POST("/api/shorten/batch", o.ShortenURLs)
 	r.GET("/api/user/urls", o.ListAll)
+	r.DELETE("/api/user/urls", o.DeleteURLs)
 }

@@ -3,7 +3,6 @@ package user
 import (
 	"encoding/base64"
 	"fmt"
-
 	"github.com/gofrs/uuid/v5"
 )
 

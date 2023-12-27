@@ -11,6 +11,10 @@ type ReqListAll struct {
 	OriginalURL string `json:"original_url"`
 }
 
-type ReqURLs struct {
-	urls *ReqURL
+type Storage struct {
+	UUID        string `db:"id"`
+	ShortURL    string `db:"shorturl"`
+	OriginalURL string `db:"originalurl"`
+	UserID      string `db:"userid"`
+	DeletedFlag bool   `db:"deleted"`
 }

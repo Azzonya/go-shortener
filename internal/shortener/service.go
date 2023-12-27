@@ -111,6 +111,14 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) ([]*entities.ReqURL, er
 	return shortenedURLs, nil
 }
 
+func (s *Shortener) DeleteURLs(urls []string) error {
+	return s.repo.DeleteURLs(urls, s.UserID)
+}
+
+func (s *Shortener) IsDeleted(shortURL string) bool {
+	return s.repo.URLDeleted(shortURL)
+}
+
 func (s *Shortener) GenerateShortURL() string {
 	newUUID := uuid.New()
 	return newUUID.String()

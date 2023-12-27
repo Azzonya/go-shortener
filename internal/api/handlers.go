@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/Azzonya/go-shortener/internal/entities"
+	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/session"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -112,6 +113,11 @@ func (o *Rest) Redirect(c *gin.Context) {
 		return
 	}
 
+	if o.shortener.IsDeleted(shortURL) {
+		c.AbortWithStatus(http.StatusGone)
+		return
+	}
+
 	URL, exist := o.shortener.GetOneByShortURL(shortURL)
 	if !exist {
 		c.String(http.StatusBadRequest, "Failed to get original URL")
@@ -156,7 +162,7 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 func (o *Rest) ListAll(c *gin.Context) {
 	var err error
 
-	user, ok := session.GetUserFromContext(c.Request.Context())
+	u, ok := session.GetUserFromContext(c.Request.Context())
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to get user",
@@ -165,7 +171,7 @@ func (o *Rest) ListAll(c *gin.Context) {
 		return
 	}
 
-	if user.IsNew() {
+	if u.IsNew() {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "no cookie",
 			"error":   errors.New("no authorized").Error(),
@@ -173,7 +179,7 @@ func (o *Rest) ListAll(c *gin.Context) {
 		return
 	}
 
-	o.shortener.UserID = user.ID
+	o.shortener.UserID = u.ID
 
 	result, err := o.shortener.ListAll()
 	if err != nil {
@@ -195,4 +201,37 @@ func (o *Rest) ListAll(c *gin.Context) {
 
 func (o *Rest) Ping(c *gin.Context) {
 	c.JSON(http.StatusOK, "")
+}
+
+func (o *Rest) DeleteURLs(c *gin.Context) {
+	var err error
+	var shortURLs []string
+
+	err = c.BindJSON(&shortURLs)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to read body",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	u, err := session.GetUser(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get user",
+			"error":   err,
+		})
+		return
+	}
+
+	o.shortener.UserID = u.ID
+
+	go func() {
+		if err = o.shortener.DeleteURLs(shortURLs); err != nil {
+			logger.Log.Error("Failed to delete URLs " + err.Error())
+		}
+	}()
+
+	c.AbortWithStatus(http.StatusAccepted)
 }

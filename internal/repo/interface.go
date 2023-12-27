@@ -14,6 +14,8 @@ type Repo interface {
 	GetByShortURL(shortURL string) (string, bool)
 	GetByOriginalURL(originalURL string) (string, bool)
 	ListAll(userID string) ([]*entities.ReqListAll, error)
+	DeleteURLs(urls []string, userID string) error
+	URLDeleted(shortURL string) bool
 
 	Ping() error
 }
