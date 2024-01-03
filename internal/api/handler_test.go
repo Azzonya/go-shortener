@@ -51,7 +51,7 @@ func TestRest_Shorten(t *testing.T) {
 
 			repo := pg.New(db)
 
-			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor, repo, "", false)
+			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor, repo, false)
 
 			r := gin.Default()
 			r.POST(tt.request, tt.rest.Shorten)
@@ -124,7 +124,7 @@ func TestRest_Redirect(t *testing.T) {
 
 			repo := pg.New(db)
 
-			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor, repo, "", false)
+			tt.rest.shortener = shortener_service.New("http://localhost:8080", stor, repo, false)
 
 			err = stor.Add(testShortURL, tt.want.location)
 			require.NoError(t, err)

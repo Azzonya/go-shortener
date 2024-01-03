@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/Azzonya/go-shortener/internal/entities"
-	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/session"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -23,6 +22,7 @@ type Response struct {
 func (o *Rest) ShortenJSON(c *gin.Context) {
 	var err error
 	var exist bool
+	var userID string
 
 	req := &Request{}
 	resp := Response{}
@@ -38,10 +38,10 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 
 	user, ok := session.GetUserFromContext(c.Request.Context())
 	if ok {
-		o.shortener.UserID = user.ID
+		userID = user.ID
 	}
 
-	resp.Result, err = o.shortener.ShortenAndSaveLink(req.URL)
+	resp.Result, err = o.shortener.ShortenAndSaveLink(req.URL, userID)
 	if err != nil {
 		resp.Result, exist = o.shortener.GetOneByOriginalURL(req.URL)
 		if !exist {
@@ -74,6 +74,7 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 
 func (o *Rest) Shorten(c *gin.Context) {
 	var exist bool
+	var userID string
 
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
@@ -83,12 +84,12 @@ func (o *Rest) Shorten(c *gin.Context) {
 
 	user, ok := session.GetUserFromContext(c.Request.Context())
 	if ok {
-		o.shortener.UserID = user.ID
+		userID = user.ID
 	}
 
 	reqObj := strings.TrimSpace(string(body))
 
-	outputURL, err := o.shortener.ShortenAndSaveLink(reqObj)
+	outputURL, err := o.shortener.ShortenAndSaveLink(reqObj, userID)
 	if err != nil {
 		outputURL, exist = o.shortener.GetOneByOriginalURL(reqObj)
 		if !exist {
@@ -129,7 +130,7 @@ func (o *Rest) Redirect(c *gin.Context) {
 }
 
 func (o *Rest) ShortenURLs(c *gin.Context) {
-
+	var userID string
 	var URLs []*entities.ReqURL
 
 	err := c.BindJSON(&URLs)
@@ -143,10 +144,10 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 
 	user, ok := session.GetUserFromContext(c.Request.Context())
 	if ok {
-		o.shortener.UserID = user.ID
+		userID = user.ID
 	}
 
-	shortenedURLs, err := o.shortener.ShortenURLs(URLs)
+	shortenedURLs, err := o.shortener.ShortenURLs(URLs, userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Shorten URLs",
@@ -179,9 +180,9 @@ func (o *Rest) ListAll(c *gin.Context) {
 		return
 	}
 
-	o.shortener.UserID = u.ID
+	userID := u.ID
 
-	result, err := o.shortener.ListAll()
+	result, err := o.shortener.ListAll(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to get urls",
@@ -225,13 +226,9 @@ func (o *Rest) DeleteURLs(c *gin.Context) {
 		return
 	}
 
-	o.shortener.UserID = u.ID
+	userID := u.ID
 
-	go func() {
-		if err = o.shortener.DeleteURLs(shortURLs); err != nil {
-			logger.Log.Error("Failed to delete URLs " + err.Error())
-		}
-	}()
+	o.shortener.DeleteURLs(shortURLs, userID)
 
 	c.AbortWithStatus(http.StatusAccepted)
 }

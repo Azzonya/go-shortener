@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/internal/inmemory"
+	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/repo"
 	"github.com/google/uuid"
 	"net/url"
@@ -14,15 +15,13 @@ type Shortener struct {
 	inmemory *inmemory.Storage
 	baseURL  string
 	UseDB    bool
-	UserID   string
 }
 
-func New(baseURL string, inmemory *inmemory.Storage, repo repo.Repo, UserID string, UseDB bool) *Shortener {
+func New(baseURL string, inmemory *inmemory.Storage, repo repo.Repo, UseDB bool) *Shortener {
 	return &Shortener{
 		baseURL:  baseURL,
 		inmemory: inmemory,
 		repo:     repo,
-		UserID:   UserID,
 		UseDB:    UseDB,
 	}
 }
@@ -48,8 +47,8 @@ func (s *Shortener) GetOneByOriginalURL(url string) (string, bool) {
 	return outputURL, exist
 }
 
-func (s *Shortener) ListAll() ([]*entities.ReqListAll, error) {
-	list, err := s.repo.ListAll(s.UserID)
+func (s *Shortener) ListAll(userID string) ([]*entities.ReqListAll, error) {
+	list, err := s.repo.ListAll(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,14 +59,14 @@ func (s *Shortener) ListAll() ([]*entities.ReqListAll, error) {
 	return list, nil
 }
 
-func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
+func (s *Shortener) ShortenAndSaveLink(originalURL, userID string) (string, error) {
 	var err error
 	shortURL := s.GenerateShortURL()
 
 	if !s.UseDB {
 		err = s.inmemory.Add(shortURL, originalURL)
 	} else {
-		err = s.repo.AddNew(originalURL, shortURL, s.UserID)
+		err = s.repo.AddNew(originalURL, shortURL, userID)
 	}
 
 	if err != nil {
@@ -79,7 +78,7 @@ func (s *Shortener) ShortenAndSaveLink(originalURL string) (string, error) {
 	return outputURL, nil
 }
 
-func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) ([]*entities.ReqURL, error) {
+func (s *Shortener) ShortenURLs(urls []*entities.ReqURL, userID string) ([]*entities.ReqURL, error) {
 	var shortenedURLs []*entities.ReqURL
 
 	for i := range urls {
@@ -93,7 +92,7 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) ([]*entities.ReqURL, er
 		})
 	}
 
-	err := s.repo.CreateShortURLs(shortenedURLs, s.UserID)
+	err := s.repo.CreateShortURLs(shortenedURLs, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -111,8 +110,12 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL) ([]*entities.ReqURL, er
 	return shortenedURLs, nil
 }
 
-func (s *Shortener) DeleteURLs(urls []string) error {
-	return s.repo.DeleteURLs(urls, s.UserID)
+func (s *Shortener) DeleteURLs(urls []string, userID string) {
+	go func() {
+		if err := s.repo.DeleteURLs(urls, userID); err != nil {
+			logger.Log.Error("Failed to delete URLs " + err.Error())
+		}
+	}()
 }
 
 func (s *Shortener) IsDeleted(shortURL string) bool {
