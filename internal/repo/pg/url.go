@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/Azzonya/go-shortener/internal/entities"
+	"github.com/Azzonya/go-shortener/internal/logger"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 )
@@ -18,9 +20,8 @@ func New(db *pgxpool.Pool) *St {
 	}
 
 	var err error
-	exist := s.TableExist()
 
-	if !exist {
+	if !s.TableExist() {
 		err = s.TableInit()
 		if err != nil {
 			return nil
@@ -36,7 +37,9 @@ func (s *St) TableInit() error {
 	query := `CREATE TABLE urls (
 				id SERIAL PRIMARY KEY,
 				originalURL VARCHAR(255) NOT NULL,
-				shortURL VARCHAR(255) UNIQUE NOT NULL
+				shortURL VARCHAR(255) UNIQUE NOT NULL,
+                userID VARCHAR(255) NOT NULL,
+                deleted BOOLEAN default false 
 				);
 				DO $$ 
 				BEGIN 
@@ -60,10 +63,10 @@ func (s *St) TableExist() bool {
 	return err == nil
 }
 
-func (s *St) AddNew(originalURL, shortURL string) error {
-	query := `INSERT INTO urls (originalURL, shortURL) VALUES ($1, $2)`
+func (s *St) AddNew(originalURL, shortURL, userID string) error {
+	query := `INSERT INTO urls (originalURL, shortURL, userID) VALUES ($1, $2, $3)`
 
-	_, err := s.db.Exec(context.Background(), query, originalURL, shortURL)
+	_, err := s.db.Exec(context.Background(), query, originalURL, shortURL, userID)
 
 	if err != nil {
 		return err
@@ -122,7 +125,30 @@ func (s *St) GetByOriginalURL(originalURL string) (string, bool) {
 	return url, exist
 }
 
-func (s *St) CreateShortURLs(urls []*entities.ReqURL) error {
+func (s *St) ListAll(userID string) ([]*entities.ReqListAll, error) {
+	result := []*entities.ReqListAll{}
+	query := `SELECT originalurl, shortURL from urls WHERE userID = $1`
+
+	rows, err := s.db.Query(context.Background(), query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		URL := entities.ReqListAll{}
+		err = rows.Scan(&URL.OriginalURL, &URL.ShortURL)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, &URL)
+	}
+
+	return result, nil
+}
+
+func (s *St) CreateShortURLs(urls []*entities.ReqURL, userID string) error {
 	ctx := context.Background()
 
 	tx, err := s.db.Begin(ctx)
@@ -136,13 +162,13 @@ func (s *St) CreateShortURLs(urls []*entities.ReqURL) error {
 		}
 	}()
 
-	stmt, err := tx.Prepare(ctx, "insertURLs", "INSERT INTO urls (originalURL, shortURL) VALUES($1, $2)")
+	stmt, err := tx.Prepare(ctx, "insertURLs", "INSERT INTO urls (originalURL, shortURL, userID) VALUES($1, $2, $3)")
 	if err != nil {
 		return fmt.Errorf("tx query error: %w", err)
 	}
 
 	for _, v := range urls {
-		_, err := tx.Exec(ctx, stmt.Name, v.OriginalURL, v.ShortURL)
+		_, err := tx.Exec(ctx, stmt.Name, v.OriginalURL, v.ShortURL, userID)
 		if err != nil {
 			return fmt.Errorf("statement exec error: %w", err)
 		}
@@ -154,6 +180,36 @@ func (s *St) CreateShortURLs(urls []*entities.ReqURL) error {
 	}
 
 	return nil
+}
+
+func (s *St) DeleteURLs(urls []string, userID string) error {
+	batch := &pgx.Batch{}
+
+	for _, data := range urls {
+		batch.Queue("UPDATE urls SET deleted = true WHERE shorturl = $1 AND userid = $2", data, userID)
+	}
+
+	bRes := s.db.SendBatch(context.Background(), batch)
+	err := bRes.Close()
+	if err != nil {
+		logger.Log.Error(err.Error())
+	}
+
+	return err
+}
+
+func (s *St) URLDeleted(shortURL string) bool {
+	deleted := false
+	query := `SELECT deleted from urls WHERE shortURL = $1`
+
+	row := s.db.QueryRow(context.Background(), query, shortURL)
+
+	err := row.Scan(&deleted)
+	if err != nil {
+		return false
+	}
+
+	return deleted
 }
 
 func (s *St) Ping() error {
