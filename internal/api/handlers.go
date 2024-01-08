@@ -207,7 +207,6 @@ func (o *Rest) Ping(c *gin.Context) {
 func (o *Rest) DeleteURLs(c *gin.Context) {
 	var err error
 	var shortURLs []string
-
 	err = c.BindJSON(&shortURLs)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
