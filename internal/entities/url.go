@@ -6,6 +6,15 @@ type ReqURL struct {
 	ShortURL    string `json:"short_url"`
 }
 
-type ReqURLs struct {
-	urls *ReqURL
+type ReqListAll struct {
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
+}
+
+type Storage struct {
+	UUID        string `db:"id"`
+	ShortURL    string `db:"shorturl"`
+	OriginalURL string `db:"originalurl"`
+	UserID      string `db:"userid"`
+	DeletedFlag bool   `db:"deleted"`
 }

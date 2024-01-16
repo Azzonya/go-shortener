@@ -5,9 +5,10 @@ import (
 	"github.com/Azzonya/go-shortener/internal/api"
 	"github.com/Azzonya/go-shortener/internal/cfg"
 	"github.com/Azzonya/go-shortener/internal/logger"
+	"github.com/Azzonya/go-shortener/internal/repo"
+	"github.com/Azzonya/go-shortener/internal/repo/inmemory"
 	"github.com/Azzonya/go-shortener/internal/repo/pg"
-	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
-	"github.com/Azzonya/go-shortener/internal/storage"
+	"github.com/Azzonya/go-shortener/internal/shortener"
 	"github.com/Azzonya/go-shortener/pkg"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
@@ -16,12 +17,12 @@ import (
 )
 
 type appSt struct {
-	conf      *cfg.Conf
-	api       *api.Rest
-	storage   *storage.Storage
-	shortener *shortener_service.Shortener
+	conf *cfg.Conf
+	api  *api.Rest
+	//storage   *inmemory.Storage
+	shortener *shortener.Shortener
 	db        *pgxpool.Pool
-	repo      *pg.St
+	repo      repo.Repo
 }
 
 func StopSignal() <-chan os.Signal {
@@ -35,30 +36,27 @@ func (a *appSt) Init(conf *cfg.Conf) {
 
 	a.conf = conf
 
-	useDB := false
-	if conf.PgDsn != "" {
+	if conf.UseDatabase() {
 		a.db, err = pkg.InitDatabasePg(conf.PgDsn)
 		if err != nil {
 			panic(err)
 		}
 
 		a.repo = pg.New(a.db)
-
-		useDB = true
+	} else {
+		a.repo, err = inmemory.New(conf.FileStoragePath)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	if err = logger.Initialize(conf.LogLevel); err != nil {
 		panic(err)
 	}
 
-	a.storage, err = storage.NewStorage(conf.FileStoragePath, useDB)
-	if err != nil {
-		panic(err)
-	}
+	a.shortener = shortener.New(conf.BaseURL, a.repo)
 
-	a.shortener = shortener_service.New(conf.BaseURL, a.storage, a.repo, useDB)
-
-	a.api = api.New(a.shortener)
+	a.api = api.New(a.shortener, conf.JWTSecret)
 }
 
 func (a *appSt) Start() {
@@ -73,8 +71,9 @@ func (a *appSt) Listen() {
 }
 
 func (a *appSt) Stop() {
-	if !a.shortener.UseDB {
-		a.storage.SyncData()
+	if !a.conf.UseDatabase() {
+		a.repo.SyncData()
+		a.db.Close()
 	}
 
 	if err := a.api.Stop(context.Background()); err != nil {

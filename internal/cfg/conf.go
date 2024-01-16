@@ -11,6 +11,7 @@ type Conf struct {
 	LogLevel        string `env:"LOG_LEVEL"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	PgDsn           string `env:"DATABASE_DSN"`
+	JWTSecret       string `env:"JWT_SECRET"`
 }
 
 func InitConfig() Conf {
@@ -20,6 +21,7 @@ func InitConfig() Conf {
 	flag.StringVar(&conf.LogLevel, "l", "info", "log level")
 	flag.StringVar(&conf.FileStoragePath, "f", "/tmp/short-url-repo.json", "file path")
 	flag.StringVar(&conf.PgDsn, "d", "", "database connection line")
+	flag.StringVar(&conf.JWTSecret, "jwt_secret", "supersecret", "jwt cookie secret")
 	flag.Parse()
 
 	err := env.Parse(&conf)
@@ -28,4 +30,8 @@ func InitConfig() Conf {
 	}
 
 	return conf
+}
+
+func (c *Conf) UseDatabase() bool {
+	return len(c.PgDsn) > 0
 }

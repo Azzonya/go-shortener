@@ -2,17 +2,23 @@ package repo
 
 import (
 	"github.com/Azzonya/go-shortener/internal/entities"
+	"github.com/Azzonya/go-shortener/internal/repo/inmemory"
 	_ "github.com/jackc/pgx/v5"
 )
 
 type Repo interface {
-	TableInit() error
+	Initialize() error
 	TableExist() bool
-	AddNew(originalURL, shortURL string) error
+	Add(originalURL, shortURL, userID string) error
+	CreateShortURLs(urls []*entities.ReqURL, userID string) error
 	Update(originalURL, shortURL string) error
 	GetByShortURL(shortURL string) (string, bool)
 	GetByOriginalURL(originalURL string) (string, bool)
-	CreateShortURLs(urls []*entities.ReqURL) error
+	ListAll(userID string) ([]*entities.ReqListAll, error)
+	DeleteURLs(urls []string, userID string) error
+	URLDeleted(shortURL string) bool
+	WriteEvent(event *inmemory.Event) error
+	SyncData()
 
 	Ping() error
 }
