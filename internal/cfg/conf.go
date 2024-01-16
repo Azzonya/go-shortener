@@ -33,5 +33,5 @@ func InitConfig() Conf {
 }
 
 func (c *Conf) UseDatabase() bool {
-	return !(c.PgDsn == "")
+	return len(c.PgDsn) > 0
 }

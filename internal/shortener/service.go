@@ -3,7 +3,6 @@ package shortener
 import (
 	"fmt"
 	"github.com/Azzonya/go-shortener/internal/entities"
-	"github.com/Azzonya/go-shortener/internal/inmemory"
 	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/repo"
 	"github.com/google/uuid"
@@ -11,32 +10,21 @@ import (
 )
 
 type Shortener struct {
-	repo     repo.Repo
-	inmemory *inmemory.Storage
-	baseURL  string
-	UseDB    bool
+	repo    repo.Repo
+	baseURL string
+	UseDB   bool
 }
 
-func New(baseURL string, inmemory *inmemory.Storage, repo repo.Repo, UseDB bool) *Shortener {
+func New(baseURL string, repo repo.Repo, UseDB bool) *Shortener {
 	return &Shortener{
-		baseURL:  baseURL,
-		inmemory: inmemory,
-		repo:     repo,
-		UseDB:    UseDB,
+		baseURL: baseURL,
+		repo:    repo,
+		UseDB:   UseDB,
 	}
 }
 
 func (s *Shortener) GetOneByShortURL(key string) (string, bool) {
-	var URL string
-	var exist bool
-
-	if s.UseDB {
-		URL, exist = s.repo.GetByShortURL(key)
-	} else {
-		URL, exist = s.inmemory.GetOne(key)
-	}
-
-	return URL, exist
+	return s.repo.GetByShortURL(key)
 }
 
 func (s *Shortener) GetOneByOriginalURL(url string) (string, bool) {
@@ -63,11 +51,7 @@ func (s *Shortener) ShortenAndSaveLink(originalURL, userID string) (string, erro
 	var err error
 	shortURL := s.GenerateShortURL()
 
-	if !s.UseDB {
-		err = s.inmemory.Add(shortURL, originalURL)
-	} else {
-		err = s.repo.AddNew(originalURL, shortURL, userID)
-	}
+	err = s.repo.Add(originalURL, shortURL, userID)
 
 	if err != nil {
 		return "", err

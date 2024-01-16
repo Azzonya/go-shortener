@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/internal/logger"
+	"github.com/Azzonya/go-shortener/internal/repo/inmemory"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
@@ -22,7 +23,7 @@ func New(db *pgxpool.Pool) *St {
 	var err error
 
 	if !s.TableExist() {
-		err = s.TableInit()
+		err = s.Initialize()
 		if err != nil {
 			return nil
 		}
@@ -33,7 +34,7 @@ func New(db *pgxpool.Pool) *St {
 	}
 }
 
-func (s *St) TableInit() error {
+func (s *St) Initialize() error {
 	query := `CREATE TABLE urls (
 				id SERIAL PRIMARY KEY,
 				originalURL VARCHAR(255) NOT NULL,
@@ -63,7 +64,7 @@ func (s *St) TableExist() bool {
 	return err == nil
 }
 
-func (s *St) AddNew(originalURL, shortURL, userID string) error {
+func (s *St) Add(originalURL, shortURL, userID string) error {
 	query := `INSERT INTO urls (originalURL, shortURL, userID) VALUES ($1, $2, $3)`
 
 	_, err := s.db.Exec(context.Background(), query, originalURL, shortURL, userID)
@@ -210,6 +211,14 @@ func (s *St) URLDeleted(shortURL string) bool {
 	}
 
 	return deleted
+}
+
+func (s *St) WriteEvent(event *inmemory.Event) error {
+	return nil
+}
+
+func (s *St) SyncData() {
+	//
 }
 
 func (s *St) Ping() error {
