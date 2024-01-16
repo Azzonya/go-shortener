@@ -48,6 +48,9 @@ func (a *appSt) Init(conf *cfg.Conf) {
 		useDB = true
 	} else {
 		a.repo, err = inmemory.New(conf.FileStoragePath)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	if err = logger.Initialize(conf.LogLevel); err != nil {
