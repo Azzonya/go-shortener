@@ -12,14 +12,12 @@ import (
 type Shortener struct {
 	repo    repo.Repo
 	baseURL string
-	UseDB   bool
 }
 
-func New(baseURL string, repo repo.Repo, UseDB bool) *Shortener {
+func New(baseURL string, repo repo.Repo) *Shortener {
 	return &Shortener{
 		baseURL: baseURL,
 		repo:    repo,
-		UseDB:   UseDB,
 	}
 }
 
@@ -103,9 +101,6 @@ func (s *Shortener) DeleteURLs(urls []string, userID string) {
 }
 
 func (s *Shortener) IsDeleted(shortURL string) bool {
-	if !s.UseDB {
-		return false
-	}
 	return s.repo.URLDeleted(shortURL)
 }
 

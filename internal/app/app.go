@@ -36,7 +36,6 @@ func (a *appSt) Init(conf *cfg.Conf) {
 
 	a.conf = conf
 
-	useDB := false
 	if conf.UseDatabase() {
 		a.db, err = pkg.InitDatabasePg(conf.PgDsn)
 		if err != nil {
@@ -44,8 +43,6 @@ func (a *appSt) Init(conf *cfg.Conf) {
 		}
 
 		a.repo = pg.New(a.db)
-
-		useDB = true
 	} else {
 		a.repo, err = inmemory.New(conf.FileStoragePath)
 		if err != nil {
@@ -57,7 +54,7 @@ func (a *appSt) Init(conf *cfg.Conf) {
 		panic(err)
 	}
 
-	a.shortener = shortener.New(conf.BaseURL, a.repo, useDB)
+	a.shortener = shortener.New(conf.BaseURL, a.repo)
 
 	a.api = api.New(a.shortener, conf.JWTSecret)
 }
@@ -74,7 +71,7 @@ func (a *appSt) Listen() {
 }
 
 func (a *appSt) Stop() {
-	if !a.shortener.UseDB {
+	if !a.conf.UseDatabase() {
 		a.repo.SyncData()
 		a.db.Close()
 	}
