@@ -60,7 +60,7 @@ func (a *appSt) Init(conf *cfg.Conf) {
 }
 
 func (a *appSt) Start() {
-	a.api.Start(a.conf.HTTPListen)
+	a.api.Start(a.conf.HTTPListen, a.conf.HTTPPprof)
 }
 
 func (a *appSt) Listen() {

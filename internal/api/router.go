@@ -11,8 +11,9 @@ import (
 )
 
 type Rest struct {
-	server    *http.Server
-	shortener *shortener_service.Shortener
+	server      *http.Server
+	pprofServer *http.Server
+	shortener   *shortener_service.Shortener
 
 	ErrorChan chan error
 	jwtSecret string
@@ -27,7 +28,7 @@ func New(shortener *shortener_service.Shortener, jwtSecret string) *Rest {
 	}
 }
 
-func (o *Rest) Start(lAddr string) {
+func (o *Rest) Start(lAddr, pAddr string) {
 	logger.Log.Info("Running server", zap.String("address", lAddr))
 
 	gin.SetMode(gin.ReleaseMode)
@@ -48,6 +49,10 @@ func (o *Rest) Start(lAddr string) {
 		Handler: r,
 	}
 
+	o.pprofServer = &http.Server{
+		Addr: pAddr,
+	}
+
 	go func() {
 		defer func() {
 			if rec := recover(); rec != nil {
@@ -56,6 +61,19 @@ func (o *Rest) Start(lAddr string) {
 		}()
 
 		err := o.server.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			o.ErrorChan <- err
+		}
+	}()
+
+	go func() {
+		defer func() {
+			if rec := recover(); rec != nil {
+				logger.Log.Error("Recovered from panic: %v")
+			}
+		}()
+
+		err := o.pprofServer.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			o.ErrorChan <- err
 		}

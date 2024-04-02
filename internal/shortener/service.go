@@ -27,6 +27,9 @@ func (s *Shortener) GetOneByShortURL(key string) (string, bool) {
 
 func (s *Shortener) GetOneByOriginalURL(url string) (string, bool) {
 	URL, exist := s.repo.GetByOriginalURL(url)
+	if !exist {
+		return "", false
+	}
 
 	outputURL := fmt.Sprintf("%s/%s", s.baseURL, URL)
 
@@ -46,12 +49,8 @@ func (s *Shortener) ListAll(userID string) ([]*entities.ReqListAll, error) {
 }
 
 func (s *Shortener) ShortenAndSaveLink(originalURL, userID string) (string, error) {
-	var err error
 	shortURL := s.GenerateShortURL()
-
-	err = s.repo.Add(originalURL, shortURL, userID)
-
-	if err != nil {
+	if err := s.repo.Add(originalURL, shortURL, userID); err != nil {
 		return "", err
 	}
 
@@ -62,16 +61,18 @@ func (s *Shortener) ShortenAndSaveLink(originalURL, userID string) (string, erro
 
 func (s *Shortener) ShortenURLs(urls []*entities.ReqURL, userID string) ([]*entities.ReqURL, error) {
 	var shortenedURLs []*entities.ReqURL
+	shortenedURLs = make([]*entities.ReqURL, len(urls))
 
-	for i := range urls {
+	for i, u := range urls {
 		shortURL := s.GenerateShortURL()
-		urls[i].ShortURL = shortURL
 
-		shortenedURLs = append(shortenedURLs, &entities.ReqURL{
-			ID:          urls[i].ID,
-			OriginalURL: urls[i].OriginalURL,
+		shortenedURLs[i] = &entities.ReqURL{
+			ID:          u.ID,
+			OriginalURL: u.OriginalURL,
 			ShortURL:    shortURL,
-		})
+		}
+
+		urls[i].ShortURL = shortURL
 	}
 
 	err := s.repo.CreateShortURLs(shortenedURLs, userID)
@@ -105,8 +106,7 @@ func (s *Shortener) IsDeleted(shortURL string) bool {
 }
 
 func (s *Shortener) GenerateShortURL() string {
-	newUUID := uuid.New()
-	return newUUID.String()
+	return uuid.New().String()
 }
 
 func (s *Shortener) PingDB() error {
