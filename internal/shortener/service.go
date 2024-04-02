@@ -60,8 +60,7 @@ func (s *Shortener) ShortenAndSaveLink(originalURL, userID string) (string, erro
 }
 
 func (s *Shortener) ShortenURLs(urls []*entities.ReqURL, userID string) ([]*entities.ReqURL, error) {
-	var shortenedURLs []*entities.ReqURL
-	shortenedURLs = make([]*entities.ReqURL, len(urls))
+	shortenedURLs := make([]*entities.ReqURL, len(urls))
 
 	for i, u := range urls {
 		shortURL := s.GenerateShortURL()
