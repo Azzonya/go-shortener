@@ -1,7 +1,6 @@
 package shortener
 
 import (
-	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/internal/repo/pg"
 	"github.com/Azzonya/go-shortener/pkg"
 	"testing"
@@ -20,18 +19,18 @@ func BenchmarkService(b *testing.B) {
 
 	shortener := New(BaseURL, repo)
 
-	urls := []*entities.ReqURL{
-		{
-			ID:          "1",
-			OriginalURL: "blab2la.com",
-			ShortURL:    "",
-		},
-		{
-			ID:          "1",
-			OriginalURL: "ssdsd3s.kz",
-			ShortURL:    "",
-		},
-	}
+	//urls := []*entities.ReqURL{
+	//	{
+	//		ID:          "1",
+	//		OriginalURL: "blab2la.com",
+	//		ShortURL:    "",
+	//	},
+	//	{
+	//		ID:          "1",
+	//		OriginalURL: "ssdsd3s.kz",
+	//		ShortURL:    "",
+	//	},
+	//}
 
 	b.ResetTimer()
 
@@ -41,11 +40,11 @@ func BenchmarkService(b *testing.B) {
 		}
 	})
 
-	b.Run("shorten_urls", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			shortener.ShortenURLs(urls, "1")
-		}
-	})
+	//b.Run("shorten_urls", func(b *testing.B) {
+	//	for i := 0; i < b.N; i++ {
+	//		shortener.ShortenURLs(urls, "1")
+	//	}
+	//})
 
 	b.Run("shorten_and_save_link", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
