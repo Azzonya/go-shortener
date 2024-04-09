@@ -2,10 +2,11 @@ package middleware
 
 import (
 	"compress/gzip"
-	"github.com/gin-gonic/gin"
 	"io"
 	"log"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type gzipWriter struct {

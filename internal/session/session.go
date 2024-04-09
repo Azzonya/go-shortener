@@ -3,6 +3,7 @@ package session
 import (
 	"context"
 	"errors"
+
 	"github.com/Azzonya/go-shortener/internal/user"
 )
 

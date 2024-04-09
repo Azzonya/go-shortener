@@ -2,12 +2,14 @@ package api
 
 import (
 	"context"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
 	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/middleware"
 	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
-	"net/http"
 )
 
 type Rest struct {

@@ -2,11 +2,13 @@ package shortener
 
 import (
 	"fmt"
+	"net/url"
+
+	"github.com/google/uuid"
+
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/repo"
-	"github.com/google/uuid"
-	"net/url"
 )
 
 type Shortener struct {

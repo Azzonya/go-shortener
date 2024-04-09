@@ -1,9 +1,10 @@
 package repo
 
 import (
+	_ "github.com/jackc/pgx/v5"
+
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/internal/repo/inmemory"
-	_ "github.com/jackc/pgx/v5"
 )
 
 type Repo interface {

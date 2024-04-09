@@ -3,11 +3,13 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"github.com/Azzonya/go-shortener/internal/user"
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
+
+	"github.com/Azzonya/go-shortener/internal/user"
 )
 
 const (

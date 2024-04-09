@@ -3,11 +3,12 @@ package inmemory
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/Azzonya/go-shortener/internal/entities"
 	"io"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/Azzonya/go-shortener/internal/entities"
 )
 
 type St struct {

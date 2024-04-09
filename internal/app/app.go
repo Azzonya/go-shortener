@@ -2,6 +2,12 @@ package app
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/Azzonya/go-shortener/internal/api"
 	"github.com/Azzonya/go-shortener/internal/cfg"
 	"github.com/Azzonya/go-shortener/internal/logger"
@@ -10,10 +16,6 @@ import (
 	"github.com/Azzonya/go-shortener/internal/repo/pg"
 	"github.com/Azzonya/go-shortener/internal/shortener"
 	"github.com/Azzonya/go-shortener/pkg"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 type appSt struct {

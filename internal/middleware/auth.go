@@ -1,13 +1,15 @@
 package middleware
 
 import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
 	"github.com/Azzonya/go-shortener/internal/auth"
 	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/session"
 	"github.com/Azzonya/go-shortener/internal/user"
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
-	"net/http"
 )
 
 func AuthMiddleware(jwtSecret string) gin.HandlerFunc {

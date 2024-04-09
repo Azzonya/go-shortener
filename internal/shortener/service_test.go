@@ -1,9 +1,10 @@
 package shortener
 
 import (
+	"testing"
+
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/internal/repo/inmemory"
-	"testing"
 )
 
 const BaseURL = "http://localhost:8080"

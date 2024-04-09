@@ -3,12 +3,14 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"github.com/Azzonya/go-shortener/internal/entities"
-	"github.com/Azzonya/go-shortener/internal/session"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/Azzonya/go-shortener/internal/entities"
+	"github.com/Azzonya/go-shortener/internal/session"
 )
 
 type Request struct {

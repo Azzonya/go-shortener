@@ -1,16 +1,18 @@
 package api
 
 import (
-	"github.com/Azzonya/go-shortener/internal/repo/inmemory"
-	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/Azzonya/go-shortener/internal/repo/inmemory"
+	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
 )
 
 func TestRest_Shorten(t *testing.T) {
