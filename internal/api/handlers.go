@@ -1,3 +1,4 @@
+// Package api provides HTTP handlers for URL shortening API endpoints.
 package api
 
 import (
@@ -13,14 +14,17 @@ import (
 	"github.com/Azzonya/go-shortener/internal/session"
 )
 
+// Request represents the request structure for URL shortening.
 type Request struct {
 	URL string `json:"url"`
 }
 
+// Response represents the response structure for URL shortening.
 type Response struct {
 	Result string `json:"result"`
 }
 
+// ShortenJSON handles HTTP requests with JSON bodies for URL shortening.
 func (o *Rest) ShortenJSON(c *gin.Context) {
 	var err error
 	var exist bool
@@ -74,6 +78,7 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 	}
 }
 
+// Shorten handles HTTP requests for URL shortening.
 func (o *Rest) Shorten(c *gin.Context) {
 	var exist bool
 	var userID string
@@ -109,6 +114,7 @@ func (o *Rest) Shorten(c *gin.Context) {
 	}
 }
 
+// Redirect redirects requests from short URLs to their original URLs.
 func (o *Rest) Redirect(c *gin.Context) {
 	shortURL, exist := c.Params.Get("id")
 	if !exist {
@@ -131,6 +137,7 @@ func (o *Rest) Redirect(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, URL)
 }
 
+// ShortenURLs handles HTTP requests to shorten multiple URLs simultaneously.
 func (o *Rest) ShortenURLs(c *gin.Context) {
 	var userID string
 	var URLs []*entities.ReqURL
@@ -162,6 +169,7 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 	c.JSON(http.StatusCreated, shortenedURLs)
 }
 
+// ListAll handles HTTP requests to list all shortened URLs associated with a user.
 func (o *Rest) ListAll(c *gin.Context) {
 	var err error
 
@@ -202,10 +210,12 @@ func (o *Rest) ListAll(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// Ping handles HTTP requests to check the API's connectivity.
 func (o *Rest) Ping(c *gin.Context) {
 	c.JSON(http.StatusOK, "")
 }
 
+// DeleteURLs handles HTTP requests to delete multiple shortened URLs.
 func (o *Rest) DeleteURLs(c *gin.Context) {
 	var err error
 	var shortURLs []string

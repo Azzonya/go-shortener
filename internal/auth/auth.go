@@ -1,3 +1,4 @@
+// Package auth provides functionalities for user authentication and JWT handling.
 package auth
 
 import (
@@ -17,19 +18,23 @@ const (
 	defaultJWTCookieExpiration = 24 * time.Hour
 )
 
+// Claims represents the custom claims structure for JWT tokens.
 type Claims struct {
 	jwt.RegisteredClaims
 	UID string
 }
 
+// Auth provides methods for user authentication and JWT handling.
 type Auth struct {
-	JwtSecret string
+	JwtSecret string // JwtSecret is the secret key used for signing JWT tokens.
 }
 
+// New creates a new instance of the Auth struct with the provided JWT secret key.
 func New(jwtSecret string) *Auth {
 	return &Auth{JwtSecret: jwtSecret}
 }
 
+// GetUserFromCookie retrieves the user information from the session cookie.
 func (a *Auth) GetUserFromCookie(c *gin.Context) (*user.User, error) {
 	userCookie, err := c.Cookie(sessionCookie)
 	if err != nil {
@@ -39,6 +44,7 @@ func (a *Auth) GetUserFromCookie(c *gin.Context) (*user.User, error) {
 	return a.GetUserFromJWT(userCookie)
 }
 
+// GetUserFromJWT retrieves the user information from the JWT token.
 func (a *Auth) GetUserFromJWT(signedToken string) (*user.User, error) {
 	token, err := jwt.ParseWithClaims(signedToken, &Claims{},
 		func(t *jwt.Token) (interface{}, error) {
@@ -62,6 +68,7 @@ func (a *Auth) GetUserFromJWT(signedToken string) (*user.User, error) {
 	}
 }
 
+// CreateJWTCookie creates a new JWT cookie for the given user.
 func (a *Auth) CreateJWTCookie(u *user.User) (*http.Cookie, error) {
 	token, err := a.NewToken(u)
 	if err != nil {
@@ -73,6 +80,7 @@ func (a *Auth) CreateJWTCookie(u *user.User) (*http.Cookie, error) {
 	}, nil
 }
 
+// NewToken creates a new JWT token for the given user.
 func (a *Auth) NewToken(u *user.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{

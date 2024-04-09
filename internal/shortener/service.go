@@ -1,3 +1,11 @@
+// Package shortener provides functionalities for URL shortening, storage, retrieval, and management.
+// It includes methods for shortening long URLs, retrieving original URLs from short URLs,
+// listing shortened URLs associated with a user ID, deleting specific shortened URLs,
+// checking the status of a short URL, interacting with the database for storage and retrieval,
+// and handling concurrency for URL deletion.
+//
+// The package is designed to offer a comprehensive solution for URL shortening needs,
+// ensuring robustness, performance, and usability.
 package shortener
 
 import (
@@ -11,11 +19,13 @@ import (
 	"github.com/Azzonya/go-shortener/internal/repo"
 )
 
+// Shortener represents the URL shortener service.
 type Shortener struct {
-	repo    repo.Repo
-	baseURL string
+	repo    repo.Repo // Repository for storing and retrieving shortened URLs
+	baseURL string    // Base URL used for constructing shortened URLs
 }
 
+// New creates a new instance of the Shortener struct.
 func New(baseURL string, repo repo.Repo) *Shortener {
 	return &Shortener{
 		baseURL: baseURL,
@@ -23,10 +33,12 @@ func New(baseURL string, repo repo.Repo) *Shortener {
 	}
 }
 
+// GetOneByShortURL retrieves the original URL associated with a given short URL.
 func (s *Shortener) GetOneByShortURL(key string) (string, bool) {
 	return s.repo.GetByShortURL(key)
 }
 
+// GetOneByOriginalURL retrieves the short URL associated with a given original URL.
 func (s *Shortener) GetOneByOriginalURL(url string) (string, bool) {
 	URL, exist := s.repo.GetByOriginalURL(url)
 	if !exist {
@@ -38,6 +50,7 @@ func (s *Shortener) GetOneByOriginalURL(url string) (string, bool) {
 	return outputURL, exist
 }
 
+// ListAll retrieves a list of all shortened URLs associated with a given user ID.
 func (s *Shortener) ListAll(userID string) ([]*entities.ReqListAll, error) {
 	list, err := s.repo.ListAll(userID)
 	if err != nil {
@@ -50,6 +63,7 @@ func (s *Shortener) ListAll(userID string) ([]*entities.ReqListAll, error) {
 	return list, nil
 }
 
+// ShortenAndSaveLink generates a short URL for a given original URL and saves it in the repository.
 func (s *Shortener) ShortenAndSaveLink(originalURL, userID string) (string, error) {
 	shortURL := s.GenerateShortURL()
 	if err := s.repo.Add(originalURL, shortURL, userID); err != nil {
@@ -61,6 +75,7 @@ func (s *Shortener) ShortenAndSaveLink(originalURL, userID string) (string, erro
 	return outputURL, nil
 }
 
+// ShortenURLs shortens multiple URLs simultaneously and saves them in the repository.
 func (s *Shortener) ShortenURLs(urls []*entities.ReqURL, userID string) ([]*entities.ReqURL, error) {
 	shortenedURLs := make([]*entities.ReqURL, len(urls))
 
@@ -94,6 +109,7 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL, userID string) ([]*enti
 	return shortenedURLs, nil
 }
 
+// DeleteURLs deletes URLs associated with a given user ID.
 func (s *Shortener) DeleteURLs(urls []string, userID string) {
 	go func() {
 		if err := s.repo.DeleteURLs(urls, userID); err != nil {
@@ -102,14 +118,17 @@ func (s *Shortener) DeleteURLs(urls []string, userID string) {
 	}()
 }
 
+// IsDeleted checks if a given short URL has been deleted.
 func (s *Shortener) IsDeleted(shortURL string) bool {
 	return s.repo.URLDeleted(shortURL)
 }
 
+// GenerateShortURL generates a unique short URL using UUID.
 func (s *Shortener) GenerateShortURL() string {
 	return uuid.New().String()
 }
 
+// PingDB pings the database to check its connectivity.
 func (s *Shortener) PingDB() error {
 	err := s.repo.Ping()
 
