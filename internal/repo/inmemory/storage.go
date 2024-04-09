@@ -1,3 +1,5 @@
+// Package inmemory provides an in-memory implementation of the repository interface
+// for managing shortened URLs.
 package inmemory
 
 import (
@@ -11,18 +13,21 @@ import (
 	"github.com/Azzonya/go-shortener/internal/entities"
 )
 
+// St represents the in-memory storage structure for shortened URLs.
 type St struct {
-	URLMap   map[string]string
-	filePath string
-	lastID   int
+	URLMap   map[string]string // Map to store shortened URLs as key-value pairs.
+	filePath string            // File path to store the JSON data.
+	lastID   int               // Last ID used for the storage.
 }
 
+// Event represents the event structure used for JSON encoding and decoding.
 type Event struct {
 	NumberUUID  string `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }
 
+// New creates and initializes a new in-memory storage instance with the provided file path.
 func New(filePath string) (*St, error) {
 	s := &St{}
 
@@ -35,6 +40,7 @@ func New(filePath string) (*St, error) {
 	return s, nil
 }
 
+// Initialize initializes the in-memory storage by reading data from the provided file.
 func (s *St) Initialize() error {
 	file, err := os.OpenFile(s.filePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
 	if err != nil {
@@ -65,10 +71,12 @@ func (s *St) Initialize() error {
 	return nil
 }
 
+// TableExist checks if the table exists in the in-memory storage (always returns true).
 func (s *St) TableExist() bool {
 	return true
 }
 
+// Add adds a new URL mapping to the in-memory storage.
 func (s *St) Add(originalURL, shortURL, userID string) error {
 	s.URLMap[shortURL] = originalURL
 	s.lastID += 1
@@ -76,15 +84,18 @@ func (s *St) Add(originalURL, shortURL, userID string) error {
 	return nil
 }
 
+// Update always returns nil.
 func (s *St) Update(originalURL, shortURL string) error {
 	return nil
 }
 
+// GetByShortURL retrieves the original URL associated with the given short URL.
 func (s *St) GetByShortURL(shortURL string) (string, bool) {
 	URL, exist := s.URLMap[shortURL]
 	return URL, exist
 }
 
+// GetByOriginalURL retrieves the short URL associated with the given original URL.
 func (s *St) GetByOriginalURL(originalURL string) (string, bool) {
 	for key, val := range s.URLMap {
 		if val == originalURL {
@@ -94,22 +105,27 @@ func (s *St) GetByOriginalURL(originalURL string) (string, bool) {
 	return "", false
 }
 
+// ListAll always returns nil.
 func (s *St) ListAll(userID string) ([]*entities.ReqListAll, error) {
 	return nil, nil
 }
 
+// CreateShortURLs always returns nil.
 func (s *St) CreateShortURLs(urls []*entities.ReqURL, userID string) error {
 	return nil
 }
 
+// DeleteURLs always returns nil.
 func (s *St) DeleteURLs(urls []string, userID string) error {
 	return nil
 }
 
+// URLDeleted always returns false.
 func (s *St) URLDeleted(shortURL string) bool {
 	return false
 }
 
+// WriteEvent writes an event to the JSON file.
 func (s *St) WriteEvent(event *Event) error {
 	file, err := os.OpenFile(s.filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
 	if err != nil {
@@ -136,6 +152,7 @@ func (s *St) WriteEvent(event *Event) error {
 	return writer.Flush()
 }
 
+// SyncData synchronizes the in-memory storage data by writing events to the JSON file.
 func (s *St) SyncData() {
 	for k, v := range s.URLMap {
 		event := Event{
@@ -151,6 +168,7 @@ func (s *St) SyncData() {
 	}
 }
 
+// Ping pings the in-memory storage (always returns nil).
 func (s *St) Ping() error {
 	return nil
 }

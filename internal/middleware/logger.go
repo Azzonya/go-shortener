@@ -1,3 +1,4 @@
+// Package middleware provides HTTP middleware for the URL shortener application.
 package middleware
 
 import (
@@ -7,6 +8,8 @@ import (
 	"go.uber.org/zap"
 )
 
+// RequestLogger returns a Gin middleware function that logs incoming HTTP requests
+// and outgoing HTTP responses using the provided logger.
 func RequestLogger(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()

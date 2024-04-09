@@ -1,3 +1,4 @@
+// Package middleware provides HTTP middleware for the URL shortener application.
 package middleware
 
 import (
@@ -12,6 +13,12 @@ import (
 	"github.com/Azzonya/go-shortener/internal/user"
 )
 
+// AuthMiddleware is a Gin middleware function that handles authentication.
+// It takes a JWT secret as input and returns a Gin middleware function.
+// The middleware extracts the user information from the request's JWT cookie.
+// If the user information is not found or an error occurs during extraction,
+// a new user is created, a JWT cookie is set, and the user context is added to the request.
+// If any errors occur during these processes, an internal server error response is sent.
 func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorizer := auth.New(jwtSecret)

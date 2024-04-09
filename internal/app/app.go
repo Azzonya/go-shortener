@@ -1,3 +1,5 @@
+// Package app provides functionality to initialize, start, and stop the URL shortener application.
+// It sets up the API server, repository, and database connections based on the configuration.
 package app
 
 import (
@@ -18,6 +20,7 @@ import (
 	"github.com/Azzonya/go-shortener/pkg"
 )
 
+// appSt represents the application state containing configuration, API server, shortener, database connection, and repository.
 type appSt struct {
 	conf *cfg.Conf
 	api  *api.Rest
@@ -27,12 +30,14 @@ type appSt struct {
 	repo      repo.Repo
 }
 
+// StopSignal returns a channel for receiving OS signals to stop the application.
 func StopSignal() <-chan os.Signal {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	return ch
 }
 
+// Init initializes the application with the provided configuration.
 func (a *appSt) Init(conf *cfg.Conf) {
 	var err error
 
@@ -61,10 +66,12 @@ func (a *appSt) Init(conf *cfg.Conf) {
 	a.api = api.New(a.shortener, conf.JWTSecret)
 }
 
+// Start starts the application, initializing and running the API server.
 func (a *appSt) Start() {
 	a.api.Start(a.conf.HTTPListen, a.conf.HTTPPprof)
 }
 
+// Listen listens for signals to stop the application.
 func (a *appSt) Listen() {
 	select {
 	case <-StopSignal():
@@ -72,6 +79,7 @@ func (a *appSt) Listen() {
 	}
 }
 
+// Stop stops the application, closing database connections and shutting down the API server.
 func (a *appSt) Stop() {
 	if !a.conf.UseDatabase() {
 		a.repo.SyncData()
@@ -83,6 +91,7 @@ func (a *appSt) Stop() {
 	}
 }
 
+// Start initializes and starts the URL shortener application.
 func Start() {
 	conf := cfg.InitConfig()
 

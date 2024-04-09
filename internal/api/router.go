@@ -1,3 +1,4 @@
+// Package api provides the HTTP handlers and server setup for the URL shortening REST API.
 package api
 
 import (
@@ -12,6 +13,7 @@ import (
 	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
 )
 
+// Rest represents the REST API server.
 type Rest struct {
 	server      *http.Server
 	pprofServer *http.Server
@@ -21,6 +23,7 @@ type Rest struct {
 	jwtSecret string
 }
 
+// New creates a new instance of the REST API server.
 func New(shortener *shortener_service.Shortener, jwtSecret string) *Rest {
 	return &Rest{
 		shortener: shortener,
@@ -30,6 +33,7 @@ func New(shortener *shortener_service.Shortener, jwtSecret string) *Rest {
 	}
 }
 
+// Start starts the REST API server.
 func (o *Rest) Start(lAddr, pAddr string) {
 	logger.Log.Info("Running server", zap.String("address", lAddr))
 
@@ -82,6 +86,7 @@ func (o *Rest) Start(lAddr, pAddr string) {
 	}()
 }
 
+// Stop stops the REST API server.
 func (o *Rest) Stop(ctx context.Context) error {
 	defer close(o.ErrorChan)
 
@@ -93,6 +98,7 @@ func (o *Rest) Stop(ctx context.Context) error {
 	return nil
 }
 
+// SetRouters sets up the routes for the REST API server.
 func (o *Rest) SetRouters(r *gin.Engine) {
 	r.POST("/", o.Shorten)
 	r.GET("/:id", o.Redirect)
