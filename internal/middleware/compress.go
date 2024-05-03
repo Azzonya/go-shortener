@@ -26,7 +26,7 @@ func (w gzipWriter) Write(b []byte) (int, error) {
 // and the client supports gzip encoding.
 func CompressRequest() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !(c.GetHeader("Content-type") == "application/json" || c.GetHeader("Content-type") == "text/html") {
+		if c.GetHeader("Content-type") != "application/json" && c.GetHeader("Content-type") != "text/html" {
 			c.Next()
 			return
 		}
