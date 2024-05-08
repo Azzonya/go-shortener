@@ -184,6 +184,15 @@ func TestRest_Redirect(t *testing.T) {
 				statusCode: http.StatusTemporaryRedirect,
 			},
 		},
+		{
+			name:          "2nd test",
+			rest:          Rest{},
+			requestMethod: http.MethodGet,
+			want: want{
+				location:   "https://www.google.com",
+				statusCode: http.StatusTemporaryRedirect,
+			},
+		},
 	}
 
 	for _, tt := range tests {
