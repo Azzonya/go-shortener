@@ -83,8 +83,9 @@ func TestSt_Add(t *testing.T) {
 			s := &St{
 				db: tt.fields.db,
 			}
-			rand.Seed(time.Now().UnixNano())
-			randomNumber := rand.Intn(10000)
+			source := rand.NewSource(time.Now().UnixNano())
+			randomGenerator := rand.New(source)
+			randomNumber := randomGenerator.Intn(10000)
 
 			if err := s.Add(tt.args.originalURL+fmt.Sprint(randomNumber), tt.args.shortURL+fmt.Sprint(randomNumber), tt.args.userID); (err != nil) != tt.wantErr {
 				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
@@ -140,9 +141,10 @@ func TestSt_CreateShortURLs(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			rand.Seed(time.Now().UnixNano())
 			for _, v := range tt.args.urls {
-				randomNumber := rand.Intn(10000)
+				source := rand.NewSource(time.Now().UnixNano())
+				randomGenerator := rand.New(source)
+				randomNumber := randomGenerator.Intn(10000)
 				v.ShortURL += fmt.Sprint(randomNumber)
 				v.OriginalURL += fmt.Sprint(randomNumber)
 				v.ID += fmt.Sprint(randomNumber)
@@ -194,8 +196,9 @@ func TestSt_DeleteURLs(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			rand.Seed(time.Now().UnixNano())
-			randomNumber := rand.Intn(10000)
+			source := rand.NewSource(time.Now().UnixNano())
+			randomGenerator := rand.New(source)
+			randomNumber := randomGenerator.Intn(10000)
 
 			urls := []*entities.ReqURL{
 				{
@@ -572,8 +575,9 @@ func TestSt_Update(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			rand.Seed(time.Now().UnixNano())
-			randomNumber := rand.Intn(10000)
+			source := rand.NewSource(time.Now().UnixNano())
+			randomGenerator := rand.New(source)
+			randomNumber := randomGenerator.Intn(10000)
 
 			s.Add(tt.args.originalURL, tt.args.shortURL, "1")
 

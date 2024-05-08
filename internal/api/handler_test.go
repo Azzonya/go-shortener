@@ -335,6 +335,8 @@ func TestRest_ListAll(t *testing.T) {
 			r.ServeHTTP(w, request)
 
 			result := w.Result()
+			err = result.Body.Close()
+			require.NoError(t, err)
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
@@ -420,6 +422,8 @@ func TestRest_DeleteURLs(t *testing.T) {
 			r.ServeHTTP(v, requestDelete)
 
 			resultDelete := v.Result()
+			err = resultDelete.Body.Close()
+			require.NoError(t, err)
 
 			assert.Equal(t, tt.want.statusCode, resultDelete.StatusCode)
 
@@ -464,6 +468,8 @@ func TestRest_Ping(t *testing.T) {
 			r.ServeHTTP(w, request)
 
 			result := w.Result()
+			err = result.Body.Close()
+			require.NoError(t, err)
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 		})

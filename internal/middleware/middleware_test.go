@@ -43,8 +43,9 @@ func TestCompressRequest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			CompressRequest()
+			handlerFunc := CompressRequest()
 			assert.NoError(t, nil)
+			assert.NotNil(t, handlerFunc)
 		})
 	}
 }
@@ -59,8 +60,9 @@ func TestDecompressRequest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			DecompressRequest()
+			handlerFunc := DecompressRequest()
 			assert.NoError(t, nil)
+			assert.NotNil(t, handlerFunc)
 		})
 	}
 }
