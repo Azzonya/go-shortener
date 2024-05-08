@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var PgDsn = "postgresql://postgres:postgres@localhost:5432/postgres"
+var PgDsn = "postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable"
 
 func TestNew(t *testing.T) {
 	db, err := pkg.InitDatabasePg(PgDsn)
