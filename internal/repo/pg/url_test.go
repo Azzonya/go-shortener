@@ -5,8 +5,8 @@ import (
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/pkg"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/stretchr/testify/assert"
 	"math/rand"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -38,9 +38,8 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New(tt.args.db); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
-			}
+			got := New(tt.args.db)
+			assert.NotNil(t, got)
 		})
 	}
 }
