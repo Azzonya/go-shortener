@@ -1,8 +1,9 @@
 package pkg
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInitDatabasePg(t *testing.T) {

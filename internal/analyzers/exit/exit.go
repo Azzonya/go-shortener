@@ -3,8 +3,9 @@ package exit
 
 import (
 	"go/ast"
-	"golang.org/x/tools/go/analysis"
 	"strings"
+
+	"golang.org/x/tools/go/analysis"
 )
 
 // New create new instance of osexitcheck

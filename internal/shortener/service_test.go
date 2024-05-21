@@ -1,9 +1,10 @@
 package shortener
 
 import (
-	"github.com/Azzonya/go-shortener/internal/repo"
 	"reflect"
 	"testing"
+
+	"github.com/Azzonya/go-shortener/internal/repo"
 
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/internal/repo/inmemory"

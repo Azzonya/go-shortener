@@ -1,9 +1,10 @@
 package auth
 
 import (
+	"testing"
+
 	"github.com/Azzonya/go-shortener/internal/user"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestAuth_CreateJWTCookie(t *testing.T) {

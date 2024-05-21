@@ -2,16 +2,17 @@ package pg
 
 import (
 	"fmt"
+	"math/rand"
+	"testing"
+	"time"
+
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/pkg"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
-	"math/rand"
-	"testing"
-	"time"
 )
 
-var PgDsn = "postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable"
+var PgDsn = "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable"
 
 func TestNew(t *testing.T) {
 	db, err := pkg.InitDatabasePg(PgDsn)

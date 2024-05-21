@@ -57,14 +57,12 @@ func (s *St) Initialize() error {
 	for {
 		var event Event
 		if err := newDecoder.Decode(&event); err != nil {
-			if err == io.EOF {
-				break
-			} else {
+			if err != io.EOF {
 				log.Println("error decode JSON:", err)
-				break
 			}
+			break
 		}
-		s.lastID += 1
+		s.lastID++
 		s.URLMap[event.OriginalURL] = event.ShortURL
 	}
 
@@ -77,15 +75,15 @@ func (s *St) TableExist() bool {
 }
 
 // Add adds a new URL mapping to the in-memory storage.
-func (s *St) Add(originalURL, shortURL, userID string) error {
+func (s *St) Add(originalURL, shortURL, _ string) error {
 	s.URLMap[shortURL] = originalURL
-	s.lastID += 1
+	s.lastID++
 
 	return nil
 }
 
 // Update always returns nil.
-func (s *St) Update(originalURL, shortURL string) error {
+func (s *St) Update(_, _ string) error {
 	return nil
 }
 
@@ -106,22 +104,22 @@ func (s *St) GetByOriginalURL(originalURL string) (string, bool) {
 }
 
 // ListAll always returns nil.
-func (s *St) ListAll(userID string) ([]*entities.ReqListAll, error) {
+func (s *St) ListAll(_ string) ([]*entities.ReqListAll, error) {
 	return nil, nil
 }
 
 // CreateShortURLs always returns nil.
-func (s *St) CreateShortURLs(urls []*entities.ReqURL, userID string) error {
+func (s *St) CreateShortURLs(_ []*entities.ReqURL, _ string) error {
 	return nil
 }
 
 // DeleteURLs always returns nil.
-func (s *St) DeleteURLs(urls []string, userID string) error {
+func (s *St) DeleteURLs(_ []string, _ string) error {
 	return nil
 }
 
 // URLDeleted always returns false.
-func (s *St) URLDeleted(shortURL string) bool {
+func (s *St) URLDeleted(_ string) bool {
 	return false
 }
 

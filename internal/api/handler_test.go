@@ -3,12 +3,13 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/Azzonya/go-shortener/internal/entities"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/Azzonya/go-shortener/internal/entities"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

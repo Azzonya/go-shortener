@@ -5,8 +5,9 @@ package pg
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"log"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -232,7 +233,7 @@ func (s *St) URLDeleted(shortURL string) bool {
 }
 
 // WriteEvent writes an event to the storage.
-func (s *St) WriteEvent(event *inmemory.Event) error {
+func (s *St) WriteEvent(_ *inmemory.Event) error {
 	return nil
 }
 

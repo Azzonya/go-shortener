@@ -2,9 +2,10 @@ package session
 
 import (
 	"context"
-	"github.com/Azzonya/go-shortener/internal/user"
 	"reflect"
 	"testing"
+
+	"github.com/Azzonya/go-shortener/internal/user"
 )
 
 func TestGetUser(t *testing.T) {

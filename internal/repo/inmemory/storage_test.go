@@ -1,9 +1,10 @@
 package inmemory
 
 import (
-	"github.com/Azzonya/go-shortener/internal/entities"
 	"reflect"
 	"testing"
+
+	"github.com/Azzonya/go-shortener/internal/entities"
 )
 
 func TestNew(t *testing.T) {

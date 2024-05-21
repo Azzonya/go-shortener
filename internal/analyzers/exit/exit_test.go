@@ -1,9 +1,10 @@
 package exit
 
 import (
-	"golang.org/x/tools/go/analysis"
 	"reflect"
 	"testing"
+
+	"golang.org/x/tools/go/analysis"
 )
 
 func TestNew(t *testing.T) {

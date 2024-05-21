@@ -1,11 +1,12 @@
 package middleware
 
 import (
+	"testing"
+
 	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
-	"testing"
 )
 
 func TestAuthMiddleware(t *testing.T) {
