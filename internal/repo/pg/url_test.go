@@ -1,7 +1,11 @@
 package pg
 
 import (
+	"context"
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 	"math/rand"
 	"testing"
 	"time"
@@ -9,13 +13,49 @@ import (
 	"github.com/Azzonya/go-shortener/internal/entities"
 	"github.com/Azzonya/go-shortener/pkg"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/stretchr/testify/assert"
 )
 
-var PgDsn = "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable"
+func getPgDsnTestContainer() string {
+	ctx := context.Background()
+
+	req := testcontainers.ContainerRequest{
+		Image:        "postgres:13",
+		ExposedPorts: []string{"5432/tcp"},
+		Env: map[string]string{
+			"POSTGRES_PASSWORD": "password",
+			"POSTGRES_USER":     "user",
+			"POSTGRES_DB":       "testdb",
+		},
+		WaitingFor: wait.ForListeningPort("5432/tcp"),
+	}
+
+	postgresContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		return ""
+	}
+
+	host, err := postgresContainer.Host(ctx)
+	if err != nil {
+		return ""
+	}
+
+	port, err := postgresContainer.MappedPort(ctx, "5432")
+	if err != nil {
+		return ""
+	}
+
+	dsn := fmt.Sprintf("postgres://user:password@%s:%s/testdb?sslmode=disable", host, port.Port())
+
+	return dsn
+}
 
 func TestNew(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -46,7 +86,9 @@ func TestNew(t *testing.T) {
 }
 
 func TestSt_Add(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -83,6 +125,11 @@ func TestSt_Add(t *testing.T) {
 			s := &St{
 				db: tt.fields.db,
 			}
+
+			if err := s.Initialize(); (err != nil) != tt.wantErr {
+				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
 			source := rand.NewSource(time.Now().UnixNano())
 			randomGenerator := rand.New(source)
 			randomNumber := randomGenerator.Intn(10000)
@@ -95,7 +142,9 @@ func TestSt_Add(t *testing.T) {
 }
 
 func TestSt_CreateShortURLs(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -141,6 +190,10 @@ func TestSt_CreateShortURLs(t *testing.T) {
 				db: tt.fields.db,
 			}
 
+			if err := s.Initialize(); (err != nil) != tt.wantErr {
+				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
 			for _, v := range tt.args.urls {
 				source := rand.NewSource(time.Now().UnixNano())
 				randomGenerator := rand.New(source)
@@ -158,7 +211,9 @@ func TestSt_CreateShortURLs(t *testing.T) {
 }
 
 func TestSt_DeleteURLs(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -196,6 +251,10 @@ func TestSt_DeleteURLs(t *testing.T) {
 				db: tt.fields.db,
 			}
 
+			if err := s.Initialize(); (err != nil) != tt.wantErr {
+				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
 			source := rand.NewSource(time.Now().UnixNano())
 			randomGenerator := rand.New(source)
 			randomNumber := randomGenerator.Intn(10000)
@@ -219,7 +278,9 @@ func TestSt_DeleteURLs(t *testing.T) {
 }
 
 func TestSt_GetByOriginalURL(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -255,6 +316,10 @@ func TestSt_GetByOriginalURL(t *testing.T) {
 				db: tt.fields.db,
 			}
 
+			if err := s.Initialize(); (err != nil) != false {
+				t.Errorf("Initialize() error = %v, wantErr %v", err, false)
+			}
+
 			s.Add(tt.args.originalURL, tt.want, "1")
 
 			got, got1 := s.GetByOriginalURL(tt.args.originalURL)
@@ -269,7 +334,9 @@ func TestSt_GetByOriginalURL(t *testing.T) {
 }
 
 func TestSt_GetByShortURL(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -305,6 +372,10 @@ func TestSt_GetByShortURL(t *testing.T) {
 				db: tt.fields.db,
 			}
 
+			if err := s.Initialize(); (err != nil) != false {
+				t.Errorf("Initialize() error = %v, wantErr %v", err, false)
+			}
+
 			s.Add(tt.want, tt.args.shortURL, "1")
 
 			got, got1 := s.GetByShortURL(tt.args.shortURL)
@@ -319,7 +390,9 @@ func TestSt_GetByShortURL(t *testing.T) {
 }
 
 func TestSt_Initialize(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -337,7 +410,7 @@ func TestSt_Initialize(t *testing.T) {
 			fields: fields{
 				db: db,
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -353,7 +426,9 @@ func TestSt_Initialize(t *testing.T) {
 }
 
 func TestSt_ListAll(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -387,6 +462,11 @@ func TestSt_ListAll(t *testing.T) {
 			s := &St{
 				db: tt.fields.db,
 			}
+
+			if err := s.Initialize(); (err != nil) != tt.wantErr {
+				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
 			_, err := s.ListAll(tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListAll() error = %v, wantErr %v", err, tt.wantErr)
@@ -397,7 +477,9 @@ func TestSt_ListAll(t *testing.T) {
 }
 
 func TestSt_Ping(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -431,7 +513,9 @@ func TestSt_Ping(t *testing.T) {
 }
 
 func TestSt_SyncData(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -461,7 +545,9 @@ func TestSt_SyncData(t *testing.T) {
 }
 
 func TestSt_TableExist(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -487,6 +573,11 @@ func TestSt_TableExist(t *testing.T) {
 			s := &St{
 				db: tt.fields.db,
 			}
+
+			if err := s.Initialize(); (err != nil) != false {
+				t.Errorf("Initialize() error = %v, wantErr %v", err, false)
+			}
+
 			if got := s.TableExist(); got != tt.want {
 				t.Errorf("TableExist() = %v, want %v", got, tt.want)
 			}
@@ -495,7 +586,9 @@ func TestSt_TableExist(t *testing.T) {
 }
 
 func TestSt_URLDeleted(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -529,6 +622,10 @@ func TestSt_URLDeleted(t *testing.T) {
 				db: tt.fields.db,
 			}
 
+			if err := s.Initialize(); (err != nil) != false {
+				t.Errorf("Initialize() error = %v, wantErr %v", err, false)
+			}
+
 			s.Add("urldeleted.com", tt.args.shortURL, "1")
 
 			if got := s.URLDeleted(tt.args.shortURL); got != tt.want {
@@ -539,7 +636,9 @@ func TestSt_URLDeleted(t *testing.T) {
 }
 
 func TestSt_Update(t *testing.T) {
-	db, err := pkg.InitDatabasePg(PgDsn)
+	dsn := getPgDsnTestContainer()
+
+	db, err := pkg.InitDatabasePg(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -573,6 +672,10 @@ func TestSt_Update(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &St{
 				db: tt.fields.db,
+			}
+
+			if err := s.Initialize(); (err != nil) != tt.wantErr {
+				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			source := rand.NewSource(time.Now().UnixNano())
