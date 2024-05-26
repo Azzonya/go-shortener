@@ -3,6 +3,7 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,21 +16,25 @@ import (
 
 // Rest represents the REST API server.
 type Rest struct {
-	server      *http.Server
-	pprofServer *http.Server
-	shortener   *shortener_service.Shortener
+	server         *http.Server
+	pprofServer    *http.Server
+	shortener      *shortener_service.Shortener
+	tlsCertificate *tls.Certificate
 
-	ErrorChan chan error
-	jwtSecret string
+	ErrorChan   chan error
+	jwtSecret   string
+	enableHTTPS bool
 }
 
 // New creates a new instance of the REST API server.
-func New(shortener *shortener_service.Shortener, jwtSecret string) *Rest {
+func New(shortener *shortener_service.Shortener, jwtSecret string, enableHTTPS bool, tlsCertificate *tls.Certificate) *Rest {
 	return &Rest{
 		shortener: shortener,
 
-		ErrorChan: make(chan error, 1),
-		jwtSecret: jwtSecret,
+		ErrorChan:      make(chan error, 1),
+		jwtSecret:      jwtSecret,
+		enableHTTPS:    enableHTTPS,
+		tlsCertificate: tlsCertificate,
 	}
 }
 
@@ -55,6 +60,12 @@ func (o *Rest) Start(lAddr, pAddr string) {
 		Handler: r,
 	}
 
+	if o.enableHTTPS {
+		o.server.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{*o.tlsCertificate},
+		}
+	}
+
 	o.pprofServer = &http.Server{
 		Addr: pAddr,
 	}
@@ -66,7 +77,12 @@ func (o *Rest) Start(lAddr, pAddr string) {
 			}
 		}()
 
-		err := o.server.ListenAndServe()
+		var err error
+		if o.enableHTTPS {
+			err = o.server.ListenAndServeTLS("", "")
+		} else {
+			err = o.server.ListenAndServe()
+		}
 		if err != nil && err != http.ErrServerClosed {
 			o.ErrorChan <- err
 		}
