@@ -1,32 +1,45 @@
+// Package api provides the HTTP handlers and server setup for the URL shortening REST API.
 package api
 
 import (
 	"context"
+	"crypto/tls"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
 	"github.com/Azzonya/go-shortener/internal/logger"
 	"github.com/Azzonya/go-shortener/internal/middleware"
 	shortener_service "github.com/Azzonya/go-shortener/internal/shortener"
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
-	"log"
-	"net/http"
 )
 
+// Rest represents the REST API server.
 type Rest struct {
-	server    *http.Server
-	shortener *shortener_service.Shortener
+	server         *http.Server
+	pprofServer    *http.Server
+	shortener      *shortener_service.Shortener
+	tlsCertificate *tls.Certificate
 
-	ErrorChan chan error
+	ErrorChan   chan error
+	jwtSecret   string
+	enableHTTPS bool
 }
 
-func New(shortener *shortener_service.Shortener) *Rest {
+// New creates a new instance of the REST API server.
+func New(shortener *shortener_service.Shortener, jwtSecret string, enableHTTPS bool, tlsCertificate *tls.Certificate) *Rest {
 	return &Rest{
 		shortener: shortener,
 
-		ErrorChan: make(chan error, 1),
+		ErrorChan:      make(chan error, 1),
+		jwtSecret:      jwtSecret,
+		enableHTTPS:    enableHTTPS,
+		tlsCertificate: tlsCertificate,
 	}
 }
 
-func (o *Rest) Start(lAddr string) {
+// Start starts the REST API server.
+func (o *Rest) Start(lAddr, pAddr string) {
 	logger.Log.Info("Running server", zap.String("address", lAddr))
 
 	gin.SetMode(gin.ReleaseMode)
@@ -37,6 +50,7 @@ func (o *Rest) Start(lAddr string) {
 		middleware.RequestLogger(logger.Log),
 		middleware.CompressRequest(),
 		middleware.DecompressRequest(),
+		middleware.AuthMiddleware(o.jwtSecret),
 		gin.Recovery())
 
 	o.SetRouters(r)
@@ -46,20 +60,49 @@ func (o *Rest) Start(lAddr string) {
 		Handler: r,
 	}
 
+	if o.enableHTTPS {
+		o.server.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{*o.tlsCertificate},
+		}
+	}
+
+	o.pprofServer = &http.Server{
+		Addr: pAddr,
+	}
+
 	go func() {
 		defer func() {
 			if rec := recover(); rec != nil {
-				log.Printf("Recovered from panic: %v", rec)
+				logger.Log.Error("Recovered from panic: %v")
 			}
 		}()
 
-		err := o.server.ListenAndServe()
+		var err error
+		if o.enableHTTPS {
+			err = o.server.ListenAndServeTLS("", "")
+		} else {
+			err = o.server.ListenAndServe()
+		}
+		if err != nil && err != http.ErrServerClosed {
+			o.ErrorChan <- err
+		}
+	}()
+
+	go func() {
+		defer func() {
+			if rec := recover(); rec != nil {
+				logger.Log.Error("Recovered from panic: %v")
+			}
+		}()
+
+		err := o.pprofServer.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			o.ErrorChan <- err
 		}
 	}()
 }
 
+// Stop stops the REST API server.
 func (o *Rest) Stop(ctx context.Context) error {
 	defer close(o.ErrorChan)
 
@@ -71,10 +114,13 @@ func (o *Rest) Stop(ctx context.Context) error {
 	return nil
 }
 
+// SetRouters sets up the routes for the REST API server.
 func (o *Rest) SetRouters(r *gin.Engine) {
 	r.POST("/", o.Shorten)
 	r.GET("/:id", o.Redirect)
 	r.POST("/api/shorten", o.ShortenJSON)
 	r.GET("/ping", o.Ping)
 	r.POST("/api/shorten/batch", o.ShortenURLs)
+	r.GET("/api/user/urls", o.ListAll)
+	r.DELETE("/api/user/urls", o.DeleteURLs)
 }
