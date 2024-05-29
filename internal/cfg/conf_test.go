@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"crypto/tls"
 	"os"
 	"reflect"
 	"testing"
@@ -53,6 +54,178 @@ func TestInitConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := InitConfig(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("InitConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConf_LoadFromFile(t *testing.T) {
+	type fields struct {
+		TLSCertificate  *tls.Certificate
+		HTTPListen      string
+		HTTPPprof       string
+		BaseURL         string
+		LogLevel        string
+		FileStoragePath string
+		PgDsn           string
+		JWTSecret       string
+		ConfigFilePath  string
+		EnableHTTPS     bool
+	}
+	type args struct {
+		filePath string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name:   "test load from file",
+			fields: fields{},
+			args: args{
+				filePath: "",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Conf{
+				TLSCertificate:  tt.fields.TLSCertificate,
+				HTTPListen:      tt.fields.HTTPListen,
+				HTTPPprof:       tt.fields.HTTPPprof,
+				BaseURL:         tt.fields.BaseURL,
+				LogLevel:        tt.fields.LogLevel,
+				FileStoragePath: tt.fields.FileStoragePath,
+				PgDsn:           tt.fields.PgDsn,
+				JWTSecret:       tt.fields.JWTSecret,
+				ConfigFilePath:  tt.fields.ConfigFilePath,
+				EnableHTTPS:     tt.fields.EnableHTTPS,
+			}
+			if err := c.LoadFromFile(tt.args.filePath); (err != nil) != tt.wantErr {
+				t.Errorf("LoadFromFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestConf_applyConfig(t *testing.T) {
+	type fields struct {
+		TLSCertificate  *tls.Certificate
+		HTTPListen      string
+		HTTPPprof       string
+		BaseURL         string
+		LogLevel        string
+		FileStoragePath string
+		PgDsn           string
+		JWTSecret       string
+		ConfigFilePath  string
+		EnableHTTPS     bool
+	}
+	type args struct {
+		newConf Conf
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		{
+			name:   "test applyConfig",
+			fields: fields{},
+			args: args{
+				newConf: Conf{
+					JWTSecret: "jwt secret",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Conf{
+				TLSCertificate:  tt.fields.TLSCertificate,
+				HTTPListen:      tt.fields.HTTPListen,
+				HTTPPprof:       tt.fields.HTTPPprof,
+				BaseURL:         tt.fields.BaseURL,
+				LogLevel:        tt.fields.LogLevel,
+				FileStoragePath: tt.fields.FileStoragePath,
+				PgDsn:           tt.fields.PgDsn,
+				JWTSecret:       tt.fields.JWTSecret,
+				ConfigFilePath:  tt.fields.ConfigFilePath,
+				EnableHTTPS:     tt.fields.EnableHTTPS,
+			}
+			c.applyConfig(tt.args.newConf)
+
+			if c.JWTSecret != tt.args.newConf.JWTSecret {
+				t.Errorf("not replaced")
+			}
+		})
+	}
+}
+
+func TestConf_OverrideEnv(t *testing.T) {
+	type fields struct {
+		TLSCertificate  *tls.Certificate
+		HTTPListen      string
+		HTTPPprof       string
+		BaseURL         string
+		LogLevel        string
+		FileStoragePath string
+		PgDsn           string
+		JWTSecret       string
+		ConfigFilePath  string
+		EnableHTTPS     bool
+	}
+	type args struct {
+		name  string
+		value string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name:   "test override env",
+			fields: fields{},
+			args: args{
+				name:  "JWT_SECRET",
+				value: "test",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Conf{
+				TLSCertificate:  tt.fields.TLSCertificate,
+				HTTPListen:      tt.fields.HTTPListen,
+				HTTPPprof:       tt.fields.HTTPPprof,
+				BaseURL:         tt.fields.BaseURL,
+				LogLevel:        tt.fields.LogLevel,
+				FileStoragePath: tt.fields.FileStoragePath,
+				PgDsn:           tt.fields.PgDsn,
+				JWTSecret:       tt.fields.JWTSecret,
+				ConfigFilePath:  tt.fields.ConfigFilePath,
+				EnableHTTPS:     tt.fields.EnableHTTPS,
+			}
+
+			prevValue := os.Getenv(tt.args.name)
+
+			if err := c.OverrideEnv(tt.args.name, tt.args.value); (err != nil) != tt.wantErr {
+				t.Errorf("OverrideEnv() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			newValue := os.Getenv(tt.args.name)
+			if newValue != tt.args.value {
+				t.Errorf("not oveeride")
+			}
+
+			if err := c.OverrideEnv(tt.args.name, prevValue); (err != nil) != tt.wantErr {
+				t.Errorf("OverrideEnv() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
