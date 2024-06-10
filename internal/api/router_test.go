@@ -103,8 +103,9 @@ func TestRest_Start(t *testing.T) {
 
 func TestRest_Stop(t *testing.T) {
 	rest := &Rest{
-		jwtSecret: "my_secret",
-		ErrorChan: make(chan error, 1),
+		jwtSecret:       "my_secret",
+		ErrorChan:       make(chan error, 1),
+		IdleConnsClosed: make(chan struct{}, 1),
 	}
 
 	testCases := []struct {
