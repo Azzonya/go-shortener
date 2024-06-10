@@ -21,9 +21,10 @@ type Rest struct {
 	shortener      *shortener_service.Shortener
 	tlsCertificate *tls.Certificate
 
-	ErrorChan   chan error
-	jwtSecret   string
-	enableHTTPS bool
+	IdleConnsClosed chan struct{}
+	ErrorChan       chan error
+	jwtSecret       string
+	enableHTTPS     bool
 }
 
 // New creates a new instance of the REST API server.
@@ -31,10 +32,11 @@ func New(shortener *shortener_service.Shortener, jwtSecret string, enableHTTPS b
 	return &Rest{
 		shortener: shortener,
 
-		ErrorChan:      make(chan error, 1),
-		jwtSecret:      jwtSecret,
-		enableHTTPS:    enableHTTPS,
-		tlsCertificate: tlsCertificate,
+		IdleConnsClosed: make(chan struct{}, 1),
+		ErrorChan:       make(chan error, 1),
+		jwtSecret:       jwtSecret,
+		enableHTTPS:     enableHTTPS,
+		tlsCertificate:  tlsCertificate,
 	}
 }
 
@@ -105,6 +107,7 @@ func (o *Rest) Start(lAddr, pAddr string) {
 // Stop stops the REST API server.
 func (o *Rest) Stop(ctx context.Context) error {
 	defer close(o.ErrorChan)
+	defer close(o.IdleConnsClosed)
 
 	err := o.server.Shutdown(ctx)
 	if err != nil {

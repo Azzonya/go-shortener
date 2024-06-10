@@ -32,7 +32,7 @@ type appSt struct {
 // StopSignal returns a channel for receiving OS signals to stop the application.
 func StopSignal() <-chan os.Signal {
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	return ch
 }
 
@@ -93,6 +93,8 @@ func (a *appSt) Stop() {
 	if err := a.api.Stop(context.Background()); err != nil {
 		panic(err)
 	}
+
+	<-a.api.IdleConnsClosed
 }
 
 // Start initializes and starts the URL shortener application.
