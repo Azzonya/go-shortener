@@ -22,9 +22,8 @@ import (
 
 // appSt represents the application state containing configuration, API server, shortener, database connection, and repository.
 type appSt struct {
-	conf *cfg.Conf
-	api  *api.Rest
-	//storage   *inmemory.Storage
+	conf      *cfg.Conf
+	api       *api.Rest
 	shortener *shortener.Shortener
 	db        *pgxpool.Pool
 	repo      repo.Repo
@@ -33,7 +32,7 @@ type appSt struct {
 // StopSignal returns a channel for receiving OS signals to stop the application.
 func StopSignal() <-chan os.Signal {
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	return ch
 }
 
@@ -63,7 +62,12 @@ func (a *appSt) Init(conf *cfg.Conf) {
 
 	a.shortener = shortener.New(conf.BaseURL, a.repo)
 
-	a.api = api.New(a.shortener, conf.JWTSecret)
+	a.api = api.New(
+		a.shortener,
+		conf.JWTSecret,
+		a.conf.EnableHTTPS,
+		a.conf.TLSCertificate,
+	)
 }
 
 // Start starts the application, initializing and running the API server.
@@ -89,6 +93,8 @@ func (a *appSt) Stop() {
 	if err := a.api.Stop(context.Background()); err != nil {
 		panic(err)
 	}
+
+	<-a.api.IdleConnsClosed
 }
 
 // Start initializes and starts the URL shortener application.
