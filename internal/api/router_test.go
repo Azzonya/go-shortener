@@ -43,7 +43,7 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			restTest := New(tt.args.shortener, tt.args.jwtSecret, false, nil)
+			restTest := New(tt.args.shortener, tt.args.jwtSecret, "", false, nil)
 			assert.Equalf(t, tt.want.shortener, restTest.shortener, "New(%v, %v)", tt.args.shortener, tt.args.jwtSecret)
 			assert.Equalf(t, tt.want.jwtSecret, restTest.jwtSecret, "New(%v, %v)", tt.args.shortener, tt.args.jwtSecret)
 		})

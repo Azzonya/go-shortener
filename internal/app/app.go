@@ -65,6 +65,7 @@ func (a *appSt) Init(conf *cfg.Conf) {
 	a.api = api.New(
 		a.shortener,
 		conf.JWTSecret,
+		a.conf.TrustedSubnet,
 		a.conf.EnableHTTPS,
 		a.conf.TLSCertificate,
 	)

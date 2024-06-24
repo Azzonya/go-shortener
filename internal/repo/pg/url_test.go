@@ -418,9 +418,9 @@ func TestSt_Initialize(t *testing.T) {
 			s := &St{
 				db: tt.fields.db,
 			}
-			if err := s.Initialize(); (err != nil) != tt.wantErr {
-				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			err = s.Initialize()
+
+			assert.Nil(t, err)
 		})
 	}
 }

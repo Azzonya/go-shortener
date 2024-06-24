@@ -249,3 +249,21 @@ func (s *St) Ping() error {
 
 	return err
 }
+
+// CountUsers returns the number of unique users (userid) from the urls table.
+// It returns the count of unique userids and an error, if one occurred during the query execution.
+func (s *St) CountUsers() (int, error) {
+	var count int
+	err := s.db.QueryRow(context.Background(), "SELECT COUNT(DISTINCT userid) FROM urls").Scan(&count)
+
+	return count, err
+}
+
+// CountURLs returns the number of unique URLs (originalurl) from the urls table.
+// It returns the count of unique originalurls and an error, if one occurred during the query execution.
+func (s *St) CountURLs() (int, error) {
+	var count int
+	err := s.db.QueryRow(context.Background(), "SELECT COUNT(DISTINCT originalurl) FROM urls").Scan(&count)
+
+	return count, err
+}

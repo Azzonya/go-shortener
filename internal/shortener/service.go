@@ -128,6 +128,34 @@ func (s *Shortener) GenerateShortURL() string {
 	return uuid.New().String()
 }
 
+// GetStats returns the number of Users and URLs
+func (s *Shortener) GetStats() (*entities.Stats, error) {
+	numberOfUsers, err := s.CountUsers()
+	if err != nil {
+		return nil, err
+	}
+
+	numberOfURLs, err := s.CountURLs()
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.Stats{
+		Users: numberOfUsers,
+		URLs:  numberOfURLs,
+	}, nil
+}
+
+// CountUsers counts unique users
+func (s *Shortener) CountUsers() (int, error) {
+	return s.repo.CountUsers()
+}
+
+// CountURLs counts unique URLs
+func (s *Shortener) CountURLs() (int, error) {
+	return s.repo.CountURLs()
+}
+
 // PingDB pings the database to check its connectivity.
 func (s *Shortener) PingDB() error {
 	err := s.repo.Ping()

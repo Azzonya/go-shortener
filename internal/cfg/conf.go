@@ -24,6 +24,7 @@ type Conf struct {
 	JWTSecret       string           `env:"JWT_SECRET"`           // JWTSecret represents the JWT cookie secret for authentication.
 	ConfigFilePath  string           `env:"config_file_path"`     // ConfigFilePath represents the path to config file
 	EnableHTTPS     bool             `env:"ENABLE_HTTPS"`         // EnableHTTPS specifies whether to enable HTTPS for the server.
+	TrustedSubnet   string           `env:"TRUSTED_SUBNET"`       // TrustedSubnet representation of classless addressing (CIDR)
 }
 
 // InitConfig initializes the application configuration from environment variables and command-line flags.
@@ -37,6 +38,7 @@ func InitConfig() Conf {
 	flag.StringVar(&conf.FileStoragePath, "f", "/tmp/short-url-repo.json", "file path")
 	flag.StringVar(&conf.PgDsn, "d", "", "database connection line")
 	flag.StringVar(&conf.JWTSecret, "jwt_secret", "supersecret", "jwt cookie secret")
+	flag.StringVar(&conf.TrustedSubnet, "t", "", "trusted subnet")
 	flag.BoolVar(&conf.EnableHTTPS, "s", false, "http or https")
 	flag.Parse()
 
@@ -124,6 +126,10 @@ func (c *Conf) applyConfig(newConf Conf) {
 	}
 	if newConf.TLSCertificate != nil {
 		c.TLSCertificate = newConf.TLSCertificate
+	}
+
+	if newConf.TrustedSubnet != "" {
+		c.TrustedSubnet = newConf.TrustedSubnet
 	}
 }
 

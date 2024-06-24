@@ -22,3 +22,8 @@ type Storage struct {
 	UserID      string `db:"userid"`
 	DeletedFlag bool   `db:"deleted"`
 }
+
+type Stats struct {
+	URLs  int `json:"urls"`
+	Users int `json:"users"`
+}
