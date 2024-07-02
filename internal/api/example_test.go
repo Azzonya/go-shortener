@@ -16,7 +16,7 @@ func Example() {
 
 	shortenerService := shortener.New("http://localhost:8594", repo)
 
-	api := New(shortenerService, "jwt_secret")
+	api := New(shortenerService, "jwt_secret", "", false, nil)
 
 	api.Start("localhost:8594", "localhost:8082")
 }

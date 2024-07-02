@@ -56,6 +56,12 @@ type Repo interface {
 	// SyncData synchronizes data.
 	SyncData()
 
+	// CountUsers counts unique users.
+	CountUsers() (int, error)
+
+	// CountURLs counts unique URLs.
+	CountURLs() (int, error)
+
 	// Ping pings the database to check its availability.
 	Ping() error
 }

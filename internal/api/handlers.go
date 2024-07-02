@@ -243,3 +243,24 @@ func (o *Rest) DeleteURLs(c *gin.Context) {
 
 	c.AbortWithStatus(http.StatusAccepted)
 }
+
+// Stats handles HTTP request to count users and URLs.
+func (o *Rest) Stats(c *gin.Context) {
+	realIP := c.GetHeader("X-Real-IP")
+	if realIP == "" || !o.isIPInTrustedSubnet(realIP) {
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	stats, err := o.shortener.GetStats()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to get stats",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.Header("Content-Type", "application/json")
+	c.JSON(http.StatusOK, stats)
+}

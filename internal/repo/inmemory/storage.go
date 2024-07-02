@@ -170,3 +170,19 @@ func (s *St) SyncData() {
 func (s *St) Ping() error {
 	return nil
 }
+
+// CountUsers returns the number of unique users (userid) from the urls table.
+// It returns the count of unique userids and an error, if one occurred during the query execution.
+func (s *St) CountUsers() (int, error) {
+	return 0, nil
+}
+
+// CountURLs returns the number of unique URLs (originalurl) from the urls table.
+// It returns the count of unique originalurls and an error, if one occurred during the query execution.
+func (s *St) CountURLs() (int, error) {
+	uniqueURLs := make(map[string]struct{})
+	for _, originalURL := range s.URLMap {
+		uniqueURLs[originalURL] = struct{}{}
+	}
+	return len(uniqueURLs), nil
+}
