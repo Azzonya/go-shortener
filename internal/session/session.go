@@ -4,6 +4,7 @@ package session
 import (
 	"context"
 	"errors"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/Azzonya/go-shortener/internal/user"
 )
@@ -25,6 +26,20 @@ func SetUserContext(parent context.Context, u *user.User) context.Context {
 func GetUserFromContext(ctx context.Context) (u *user.User, ok bool) {
 	u, ok = ctx.Value(ctxKeyUID).(*user.User)
 	return
+}
+
+// GetUserFromMetadata retrieves the user information from the metadata.
+func GetUserFromMetadata(ctx context.Context) (u *user.User, ok bool) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, false
+	}
+
+	userIDs := md.Get("user_id")
+	if len(userIDs) == 0 {
+		return nil, false
+	}
+	return &user.User{ID: userIDs[0]}, true
 }
 
 // GetUser retrieves the user information from the context and performs validation.

@@ -25,6 +25,7 @@ type Conf struct {
 	ConfigFilePath  string           `env:"config_file_path"`     // ConfigFilePath represents the path to config file
 	EnableHTTPS     bool             `env:"ENABLE_HTTPS"`         // EnableHTTPS specifies whether to enable HTTPS for the server.
 	TrustedSubnet   string           `env:"TRUSTED_SUBNET"`       // TrustedSubnet representation of classless addressing (CIDR)
+	GrpcPort        string           `env:"GRPC_PORT"`            // GrpcPort represents the address and port to run the GRPC server.
 }
 
 // InitConfig initializes the application configuration from environment variables and command-line flags.
@@ -39,6 +40,7 @@ func InitConfig() Conf {
 	flag.StringVar(&conf.PgDsn, "d", "", "database connection line")
 	flag.StringVar(&conf.JWTSecret, "jwt_secret", "supersecret", "jwt cookie secret")
 	flag.StringVar(&conf.TrustedSubnet, "t", "", "trusted subnet")
+	flag.StringVar(&conf.GrpcPort, "g", "5050", "grpc server port")
 	flag.BoolVar(&conf.EnableHTTPS, "s", false, "http or https")
 	flag.Parse()
 

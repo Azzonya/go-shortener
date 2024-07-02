@@ -4,6 +4,11 @@ package app
 
 import (
 	"context"
+	"github.com/Azzonya/go-shortener/internal/interceptor"
+	pb "github.com/Azzonya/go-shortener/pkg/proto/shortener"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -24,6 +29,7 @@ import (
 type appSt struct {
 	conf      *cfg.Conf
 	api       *api.Rest
+	grpcSrv   *grpc.Server
 	shortener *shortener.Shortener
 	db        *pgxpool.Pool
 	repo      repo.Repo
@@ -69,11 +75,37 @@ func (a *appSt) Init(conf *cfg.Conf) {
 		a.conf.EnableHTTPS,
 		a.conf.TLSCertificate,
 	)
+
+	interceptors := make([]grpc.UnaryServerInterceptor, 0, 3)
+
+	interceptors = append(interceptors, interceptor.GrpcInterceptorLogger())
+	interceptors = append(interceptors, interceptor.GrpcInterceptorAuth())
+
+	a.grpcSrv = grpc.NewServer(grpc.ChainUnaryInterceptor(
+		interceptors...,
+	))
+	grpcHandlers := api.NewGrpcHandlers(a.shortener)
+	pb.RegisterShortenerServer(a.grpcSrv, grpcHandlers)
+
+	reflection.Register(a.grpcSrv)
 }
 
 // Start starts the application, initializing and running the API server.
 func (a *appSt) Start() {
 	a.api.Start(a.conf.HTTPListen, a.conf.HTTPPprof)
+	logger.Log.Info("Rest api started " + a.conf.HTTPListen)
+
+	lis, err := net.Listen("tcp", ":"+a.conf.GrpcPort)
+	if err != nil {
+		panic(err)
+	}
+	go func() {
+		err = a.grpcSrv.Serve(lis)
+		if err != nil {
+			panic(err)
+		}
+	}()
+	logger.Log.Info("grpc-server started " + lis.Addr().String())
 }
 
 // Listen listens for signals to stop the application.
@@ -90,6 +122,8 @@ func (a *appSt) Stop() {
 		a.repo.SyncData()
 		a.db.Close()
 	}
+
+	a.grpcSrv.GracefulStop()
 
 	if err := a.api.Stop(context.Background()); err != nil {
 		panic(err)
