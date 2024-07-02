@@ -20,10 +20,9 @@ import (
 //   - grpc.UnaryServerInterceptor: A gRPC unary server interceptor function.
 func GrpcInterceptorAuth() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		u, ok := session.GetUserFromMetadata(ctx)
+		_, ok := session.GetUserFromMetadata(ctx)
 		if !ok {
-			var err error
-			u, err = user.New()
+			u, err := user.New()
 			if err != nil {
 				return nil, err
 			}
