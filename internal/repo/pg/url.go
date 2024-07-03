@@ -28,9 +28,10 @@ func New(db *pgxpool.Pool) *St {
 	}
 
 	var err error
+	ctx := context.Background()
 
-	if !s.TableExist() {
-		err = s.Initialize()
+	if !s.TableExist(ctx) {
+		err = s.Initialize(ctx)
 		if err != nil {
 			return nil
 		}
@@ -42,7 +43,7 @@ func New(db *pgxpool.Pool) *St {
 }
 
 // Initialize initializes the PostgreSQL storage by creating the necessary table if it doesn't exist.
-func (s *St) Initialize() error {
+func (s *St) Initialize(ctx context.Context) error {
 	query := `CREATE TABLE urls (
 				id SERIAL PRIMARY KEY,
 				originalURL VARCHAR(255) NOT NULL,
@@ -57,7 +58,7 @@ func (s *St) Initialize() error {
     			END IF;
 				END $$;`
 
-	_, err := s.db.Exec(context.Background(), query)
+	_, err := s.db.Exec(ctx, query)
 	if err != nil {
 		return fmt.Errorf("URL table creating error: %w", err)
 	}
@@ -66,18 +67,18 @@ func (s *St) Initialize() error {
 }
 
 // TableExist checks if the table exists in the PostgreSQL storage.
-func (s *St) TableExist() bool {
+func (s *St) TableExist(ctx context.Context) bool {
 	var count int
-	err := s.db.QueryRow(context.Background(), "SELECT COUNT(*) from urls").Scan(&count)
+	err := s.db.QueryRow(ctx, "SELECT COUNT(*) from urls").Scan(&count)
 
 	return err == nil
 }
 
 // Add adds a new URL mapping to the PostgreSQL storage.
-func (s *St) Add(originalURL, shortURL, userID string) error {
+func (s *St) Add(ctx context.Context, originalURL, shortURL, userID string) error {
 	query := `INSERT INTO urls (originalURL, shortURL, userID) VALUES ($1, $2, $3)`
 
-	_, err := s.db.Exec(context.Background(), query, originalURL, shortURL, userID)
+	_, err := s.db.Exec(ctx, query, originalURL, shortURL, userID)
 
 	if err != nil {
 		return err
@@ -87,23 +88,23 @@ func (s *St) Add(originalURL, shortURL, userID string) error {
 }
 
 // Update updates the short URL associated with the given original URL in the PostgreSQL storage.
-func (s *St) Update(originalURL, shortURL string) error {
+func (s *St) Update(ctx context.Context, originalURL, shortURL string) error {
 	query := `UPDATE urls SET shortURL = $1 where originalURL = $2`
 
-	_, err := s.db.Exec(context.Background(), query, shortURL, originalURL)
+	_, err := s.db.Exec(ctx, query, shortURL, originalURL)
 
 	return err
 }
 
 // GetByShortURL retrieves the original URL associated with the given short URL from the PostgreSQL storage.
-func (s *St) GetByShortURL(shortURL string) (string, bool) {
+func (s *St) GetByShortURL(ctx context.Context, shortURL string) (string, bool) {
 	var url string
 
 	exist := false
 
 	query := `SELECT originalURL from urls WHERE shortURL = $1`
 
-	row := s.db.QueryRow(context.Background(), query, shortURL)
+	row := s.db.QueryRow(ctx, query, shortURL)
 
 	err := row.Scan(&url)
 	if err != nil {
@@ -118,14 +119,14 @@ func (s *St) GetByShortURL(shortURL string) (string, bool) {
 }
 
 // GetByOriginalURL retrieves the short URL associated with the given original URL from the PostgreSQL storage.
-func (s *St) GetByOriginalURL(originalURL string) (string, bool) {
+func (s *St) GetByOriginalURL(ctx context.Context, originalURL string) (string, bool) {
 	var url string
 
 	exist := false
 
 	query := `SELECT shortURL from urls WHERE originalURL = $1`
 
-	row := s.db.QueryRow(context.Background(), query, originalURL)
+	row := s.db.QueryRow(ctx, query, originalURL)
 
 	err := row.Scan(&url)
 	if err != nil {
@@ -140,11 +141,11 @@ func (s *St) GetByOriginalURL(originalURL string) (string, bool) {
 }
 
 // ListAll retrieves all shortened URLs associated with a user from the PostgreSQL storage.
-func (s *St) ListAll(userID string) ([]*entities.ReqListAll, error) {
+func (s *St) ListAll(ctx context.Context, userID string) ([]*entities.ReqListAll, error) {
 	result := []*entities.ReqListAll{}
 	query := `SELECT originalurl, shortURL from urls WHERE userID = $1`
 
-	rows, err := s.db.Query(context.Background(), query, userID)
+	rows, err := s.db.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -164,8 +165,7 @@ func (s *St) ListAll(userID string) ([]*entities.ReqListAll, error) {
 }
 
 // CreateShortURLs creates multiple shortened URLs in a single transaction in the PostgreSQL storage.
-func (s *St) CreateShortURLs(urls []*entities.ReqURL, userID string) error {
-	ctx := context.Background()
+func (s *St) CreateShortURLs(ctx context.Context, urls []*entities.ReqURL, userID string) error {
 
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
@@ -190,7 +190,7 @@ func (s *St) CreateShortURLs(urls []*entities.ReqURL, userID string) error {
 		}
 	}
 
-	err = tx.Commit(context.Background())
+	err = tx.Commit(ctx)
 	if err != nil {
 		return fmt.Errorf("commit error: %w", err)
 	}
@@ -201,14 +201,14 @@ func (s *St) CreateShortURLs(urls []*entities.ReqURL, userID string) error {
 // DeleteURLs deletes URLs associated with the given userID.
 // It takes a slice of URLs to delete and the userID of the user.
 // It returns an error if any occurs during the deletion process.
-func (s *St) DeleteURLs(urls []string, userID string) error {
+func (s *St) DeleteURLs(ctx context.Context, urls []string, userID string) error {
 	batch := &pgx.Batch{}
 
 	for _, data := range urls {
 		batch.Queue("UPDATE urls SET deleted = true WHERE shorturl = $1 AND userid = $2", data, userID)
 	}
 
-	bRes := s.db.SendBatch(context.Background(), batch)
+	bRes := s.db.SendBatch(ctx, batch)
 	err := bRes.Close()
 	if err != nil {
 		logger.Log.Error(err.Error())
@@ -218,11 +218,11 @@ func (s *St) DeleteURLs(urls []string, userID string) error {
 }
 
 // URLDeleted checks if the URL with the given shortURL is deleted.
-func (s *St) URLDeleted(shortURL string) bool {
+func (s *St) URLDeleted(ctx context.Context, shortURL string) bool {
 	deleted := false
 	query := `SELECT deleted from urls WHERE shortURL = $1`
 
-	row := s.db.QueryRow(context.Background(), query, shortURL)
+	row := s.db.QueryRow(ctx, query, shortURL)
 
 	err := row.Scan(&deleted)
 	if err != nil {
@@ -244,8 +244,26 @@ func (s *St) SyncData() {
 }
 
 // Ping pings the database.
-func (s *St) Ping() error {
-	err := s.db.Ping(context.Background())
+func (s *St) Ping(ctx context.Context) error {
+	err := s.db.Ping(ctx)
 
 	return err
+}
+
+// CountUsers returns the number of unique users (userid) from the urls table.
+// It returns the count of unique userids and an error, if one occurred during the query execution.
+func (s *St) CountUsers(ctx context.Context) (int, error) {
+	var count int
+	err := s.db.QueryRow(ctx, "SELECT COUNT(DISTINCT userid) FROM urls").Scan(&count)
+
+	return count, err
+}
+
+// CountURLs returns the number of unique URLs (originalurl) from the urls table.
+// It returns the count of unique originalurls and an error, if one occurred during the query execution.
+func (s *St) CountURLs(ctx context.Context) (int, error) {
+	var count int
+	err := s.db.QueryRow(ctx, "SELECT COUNT(DISTINCT originalurl) FROM urls").Scan(&count)
+
+	return count, err
 }

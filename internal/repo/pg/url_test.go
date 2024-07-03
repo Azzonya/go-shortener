@@ -126,7 +126,7 @@ func TestSt_Add(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			if err := s.Initialize(); (err != nil) != tt.wantErr {
+			if err := s.Initialize(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -134,7 +134,7 @@ func TestSt_Add(t *testing.T) {
 			randomGenerator := rand.New(source)
 			randomNumber := randomGenerator.Intn(10000)
 
-			if err := s.Add(tt.args.originalURL+fmt.Sprint(randomNumber), tt.args.shortURL+fmt.Sprint(randomNumber), tt.args.userID); (err != nil) != tt.wantErr {
+			if err := s.Add(context.Background(), tt.args.originalURL+fmt.Sprint(randomNumber), tt.args.shortURL+fmt.Sprint(randomNumber), tt.args.userID); (err != nil) != tt.wantErr {
 				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -190,7 +190,7 @@ func TestSt_CreateShortURLs(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			if err := s.Initialize(); (err != nil) != tt.wantErr {
+			if err := s.Initialize(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -203,7 +203,7 @@ func TestSt_CreateShortURLs(t *testing.T) {
 				v.ID += fmt.Sprint(randomNumber)
 			}
 
-			if err := s.CreateShortURLs(tt.args.urls, tt.args.userID); (err != nil) != tt.wantErr {
+			if err := s.CreateShortURLs(context.Background(), tt.args.urls, tt.args.userID); (err != nil) != tt.wantErr {
 				t.Errorf("CreateShortURLs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -251,7 +251,7 @@ func TestSt_DeleteURLs(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			if err := s.Initialize(); (err != nil) != tt.wantErr {
+			if err := s.Initialize(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -266,11 +266,11 @@ func TestSt_DeleteURLs(t *testing.T) {
 				},
 			}
 
-			if err := s.CreateShortURLs(urls, tt.args.userID); (err != nil) != tt.wantErr {
+			if err := s.CreateShortURLs(context.Background(), urls, tt.args.userID); (err != nil) != tt.wantErr {
 				t.Errorf("CreateShortURLs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if err := s.DeleteURLs(tt.args.urls, tt.args.userID); (err != nil) != tt.wantErr {
+			if err := s.DeleteURLs(context.Background(), tt.args.urls, tt.args.userID); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteURLs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -316,13 +316,13 @@ func TestSt_GetByOriginalURL(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			if err := s.Initialize(); (err != nil) != false {
+			if err := s.Initialize(context.Background()); (err != nil) != false {
 				t.Errorf("Initialize() error = %v, wantErr %v", err, false)
 			}
 
-			s.Add(tt.args.originalURL, tt.want, "1")
+			s.Add(context.Background(), tt.args.originalURL, tt.want, "1")
 
-			got, got1 := s.GetByOriginalURL(tt.args.originalURL)
+			got, got1 := s.GetByOriginalURL(context.Background(), tt.args.originalURL)
 			if got != tt.want {
 				t.Errorf("GetByOriginalURL() got = %v, want %v", got, tt.want)
 			}
@@ -372,13 +372,13 @@ func TestSt_GetByShortURL(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			if err := s.Initialize(); (err != nil) != false {
+			if err := s.Initialize(context.Background()); (err != nil) != false {
 				t.Errorf("Initialize() error = %v, wantErr %v", err, false)
 			}
 
-			s.Add(tt.want, tt.args.shortURL, "1")
+			s.Add(context.Background(), tt.want, tt.args.shortURL, "1")
 
-			got, got1 := s.GetByShortURL(tt.args.shortURL)
+			got, got1 := s.GetByShortURL(context.Background(), tt.args.shortURL)
 			if got != tt.want {
 				t.Errorf("GetByShortURL() got = %v, want %v", got, tt.want)
 			}
@@ -418,9 +418,9 @@ func TestSt_Initialize(t *testing.T) {
 			s := &St{
 				db: tt.fields.db,
 			}
-			if err := s.Initialize(); (err != nil) != tt.wantErr {
-				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			err = s.Initialize(context.Background())
+
+			assert.Nil(t, err)
 		})
 	}
 }
@@ -463,11 +463,11 @@ func TestSt_ListAll(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			if err := s.Initialize(); (err != nil) != tt.wantErr {
+			if err := s.Initialize(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			_, err := s.ListAll(tt.args.userID)
+			_, err := s.ListAll(context.Background(), tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -505,7 +505,7 @@ func TestSt_Ping(t *testing.T) {
 			s := &St{
 				db: tt.fields.db,
 			}
-			if err := s.Ping(); (err != nil) != tt.wantErr {
+			if err := s.Ping(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Ping() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -574,11 +574,11 @@ func TestSt_TableExist(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			if err := s.Initialize(); (err != nil) != false {
+			if err := s.Initialize(context.Background()); (err != nil) != false {
 				t.Errorf("Initialize() error = %v, wantErr %v", err, false)
 			}
 
-			if got := s.TableExist(); got != tt.want {
+			if got := s.TableExist(context.Background()); got != tt.want {
 				t.Errorf("TableExist() = %v, want %v", got, tt.want)
 			}
 		})
@@ -622,13 +622,13 @@ func TestSt_URLDeleted(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			if err := s.Initialize(); (err != nil) != false {
+			if err := s.Initialize(context.Background()); (err != nil) != false {
 				t.Errorf("Initialize() error = %v, wantErr %v", err, false)
 			}
 
-			s.Add("urldeleted.com", tt.args.shortURL, "1")
+			s.Add(context.Background(), "urldeleted.com", tt.args.shortURL, "1")
 
-			if got := s.URLDeleted(tt.args.shortURL); got != tt.want {
+			if got := s.URLDeleted(context.Background(), tt.args.shortURL); got != tt.want {
 				t.Errorf("URLDeleted() = %v, want %v", got, tt.want)
 			}
 		})
@@ -674,7 +674,7 @@ func TestSt_Update(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			if err := s.Initialize(); (err != nil) != tt.wantErr {
+			if err := s.Initialize(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -682,9 +682,9 @@ func TestSt_Update(t *testing.T) {
 			randomGenerator := rand.New(source)
 			randomNumber := randomGenerator.Intn(10000)
 
-			s.Add(tt.args.originalURL, tt.args.shortURL, "1")
+			s.Add(context.Background(), tt.args.originalURL, tt.args.shortURL, "1")
 
-			if err := s.Update(tt.args.originalURL, tt.args.shortURL+fmt.Sprint(randomNumber)); (err != nil) != tt.wantErr {
+			if err := s.Update(context.Background(), tt.args.originalURL, tt.args.shortURL+fmt.Sprint(randomNumber)); (err != nil) != tt.wantErr {
 				t.Errorf("Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

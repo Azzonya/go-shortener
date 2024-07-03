@@ -4,6 +4,7 @@ package inmemory
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -32,7 +33,7 @@ func New(filePath string) (*St, error) {
 	s := &St{}
 
 	s.filePath = filePath
-	err := s.Initialize()
+	err := s.Initialize(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +42,7 @@ func New(filePath string) (*St, error) {
 }
 
 // Initialize initializes the in-memory storage by reading data from the provided file.
-func (s *St) Initialize() error {
+func (s *St) Initialize(_ context.Context) error {
 	file, err := os.OpenFile(s.filePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
 	if err != nil {
 		return err
@@ -70,12 +71,12 @@ func (s *St) Initialize() error {
 }
 
 // TableExist checks if the table exists in the in-memory storage (always returns true).
-func (s *St) TableExist() bool {
+func (s *St) TableExist(_ context.Context) bool {
 	return true
 }
 
 // Add adds a new URL mapping to the in-memory storage.
-func (s *St) Add(originalURL, shortURL, _ string) error {
+func (s *St) Add(_ context.Context, originalURL, shortURL, _ string) error {
 	s.URLMap[shortURL] = originalURL
 	s.lastID++
 
@@ -83,18 +84,18 @@ func (s *St) Add(originalURL, shortURL, _ string) error {
 }
 
 // Update always returns nil.
-func (s *St) Update(_, _ string) error {
+func (s *St) Update(_ context.Context, _, _ string) error {
 	return nil
 }
 
 // GetByShortURL retrieves the original URL associated with the given short URL.
-func (s *St) GetByShortURL(shortURL string) (string, bool) {
+func (s *St) GetByShortURL(_ context.Context, shortURL string) (string, bool) {
 	URL, exist := s.URLMap[shortURL]
 	return URL, exist
 }
 
 // GetByOriginalURL retrieves the short URL associated with the given original URL.
-func (s *St) GetByOriginalURL(originalURL string) (string, bool) {
+func (s *St) GetByOriginalURL(_ context.Context, originalURL string) (string, bool) {
 	for key, val := range s.URLMap {
 		if val == originalURL {
 			return key, true
@@ -104,22 +105,22 @@ func (s *St) GetByOriginalURL(originalURL string) (string, bool) {
 }
 
 // ListAll always returns nil.
-func (s *St) ListAll(_ string) ([]*entities.ReqListAll, error) {
+func (s *St) ListAll(_ context.Context, _ string) ([]*entities.ReqListAll, error) {
 	return nil, nil
 }
 
 // CreateShortURLs always returns nil.
-func (s *St) CreateShortURLs(_ []*entities.ReqURL, _ string) error {
+func (s *St) CreateShortURLs(_ context.Context, _ []*entities.ReqURL, _ string) error {
 	return nil
 }
 
 // DeleteURLs always returns nil.
-func (s *St) DeleteURLs(_ []string, _ string) error {
+func (s *St) DeleteURLs(_ context.Context, _ []string, _ string) error {
 	return nil
 }
 
 // URLDeleted always returns false.
-func (s *St) URLDeleted(_ string) bool {
+func (s *St) URLDeleted(_ context.Context, _ string) bool {
 	return false
 }
 
@@ -167,6 +168,22 @@ func (s *St) SyncData() {
 }
 
 // Ping pings the in-memory storage (always returns nil).
-func (s *St) Ping() error {
+func (s *St) Ping(_ context.Context) error {
 	return nil
+}
+
+// CountUsers returns the number of unique users (userid) from the urls table.
+// It returns the count of unique userids and an error, if one occurred during the query execution.
+func (s *St) CountUsers(_ context.Context) (int, error) {
+	return 0, nil
+}
+
+// CountURLs returns the number of unique URLs (originalurl) from the urls table.
+// It returns the count of unique originalurls and an error, if one occurred during the query execution.
+func (s *St) CountURLs(_ context.Context) (int, error) {
+	uniqueURLs := make(map[string]struct{})
+	for _, originalURL := range s.URLMap {
+		uniqueURLs[originalURL] = struct{}{}
+	}
+	return len(uniqueURLs), nil
 }

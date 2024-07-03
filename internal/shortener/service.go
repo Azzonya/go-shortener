@@ -9,6 +9,7 @@
 package shortener
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 
@@ -34,13 +35,13 @@ func New(baseURL string, repo repo.Repo) *Shortener {
 }
 
 // GetOneByShortURL retrieves the original URL associated with a given short URL.
-func (s *Shortener) GetOneByShortURL(key string) (string, bool) {
-	return s.repo.GetByShortURL(key)
+func (s *Shortener) GetOneByShortURL(ctx context.Context, key string) (string, bool) {
+	return s.repo.GetByShortURL(ctx, key)
 }
 
 // GetOneByOriginalURL retrieves the short URL associated with a given original URL.
-func (s *Shortener) GetOneByOriginalURL(url string) (string, bool) {
-	URL, exist := s.repo.GetByOriginalURL(url)
+func (s *Shortener) GetOneByOriginalURL(ctx context.Context, url string) (string, bool) {
+	URL, exist := s.repo.GetByOriginalURL(ctx, url)
 	if !exist {
 		return "", false
 	}
@@ -51,8 +52,8 @@ func (s *Shortener) GetOneByOriginalURL(url string) (string, bool) {
 }
 
 // ListAll retrieves a list of all shortened URLs associated with a given user ID.
-func (s *Shortener) ListAll(userID string) ([]*entities.ReqListAll, error) {
-	list, err := s.repo.ListAll(userID)
+func (s *Shortener) ListAll(ctx context.Context, userID string) ([]*entities.ReqListAll, error) {
+	list, err := s.repo.ListAll(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,9 +65,9 @@ func (s *Shortener) ListAll(userID string) ([]*entities.ReqListAll, error) {
 }
 
 // ShortenAndSaveLink generates a short URL for a given original URL and saves it in the repository.
-func (s *Shortener) ShortenAndSaveLink(originalURL, userID string) (string, error) {
+func (s *Shortener) ShortenAndSaveLink(ctx context.Context, originalURL, userID string) (string, error) {
 	shortURL := s.GenerateShortURL()
-	if err := s.repo.Add(originalURL, shortURL, userID); err != nil {
+	if err := s.repo.Add(ctx, originalURL, shortURL, userID); err != nil {
 		return "", err
 	}
 
@@ -76,7 +77,7 @@ func (s *Shortener) ShortenAndSaveLink(originalURL, userID string) (string, erro
 }
 
 // ShortenURLs shortens multiple URLs simultaneously and saves them in the repository.
-func (s *Shortener) ShortenURLs(urls []*entities.ReqURL, userID string) ([]*entities.ReqURL, error) {
+func (s *Shortener) ShortenURLs(ctx context.Context, urls []*entities.ReqURL, userID string) ([]*entities.ReqURL, error) {
 	shortenedURLs := make([]*entities.ReqURL, len(urls))
 
 	for i, u := range urls {
@@ -91,7 +92,7 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL, userID string) ([]*enti
 		urls[i].ShortURL = shortURL
 	}
 
-	err := s.repo.CreateShortURLs(shortenedURLs, userID)
+	err := s.repo.CreateShortURLs(ctx, shortenedURLs, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -110,17 +111,17 @@ func (s *Shortener) ShortenURLs(urls []*entities.ReqURL, userID string) ([]*enti
 }
 
 // DeleteURLs deletes URLs associated with a given user ID.
-func (s *Shortener) DeleteURLs(urls []string, userID string) {
+func (s *Shortener) DeleteURLs(ctx context.Context, urls []string, userID string) {
 	go func() {
-		if err := s.repo.DeleteURLs(urls, userID); err != nil {
+		if err := s.repo.DeleteURLs(ctx, urls, userID); err != nil {
 			logger.Log.Error("Failed to delete URLs " + err.Error())
 		}
 	}()
 }
 
 // IsDeleted checks if a given short URL has been deleted.
-func (s *Shortener) IsDeleted(shortURL string) bool {
-	return s.repo.URLDeleted(shortURL)
+func (s *Shortener) IsDeleted(ctx context.Context, shortURL string) bool {
+	return s.repo.URLDeleted(ctx, shortURL)
 }
 
 // GenerateShortURL generates a unique short URL using UUID.
@@ -128,9 +129,37 @@ func (s *Shortener) GenerateShortURL() string {
 	return uuid.New().String()
 }
 
+// GetStats returns the number of Users and URLs
+func (s *Shortener) GetStats(ctx context.Context) (*entities.Stats, error) {
+	numberOfUsers, err := s.CountUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	numberOfURLs, err := s.CountURLs(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.Stats{
+		Users: numberOfUsers,
+		URLs:  numberOfURLs,
+	}, nil
+}
+
+// CountUsers counts unique users
+func (s *Shortener) CountUsers(ctx context.Context) (int, error) {
+	return s.repo.CountUsers(ctx)
+}
+
+// CountURLs counts unique URLs
+func (s *Shortener) CountURLs(ctx context.Context) (int, error) {
+	return s.repo.CountURLs(ctx)
+}
+
 // PingDB pings the database to check its connectivity.
-func (s *Shortener) PingDB() error {
-	err := s.repo.Ping()
+func (s *Shortener) PingDB(ctx context.Context) error {
+	err := s.repo.Ping(ctx)
 
 	return err
 }
