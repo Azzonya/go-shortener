@@ -1,6 +1,7 @@
 package shortener
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -49,19 +50,19 @@ func BenchmarkService(b *testing.B) {
 
 	b.Run("shorten_urls", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			shortener.ShortenURLs(urls, "1")
+			shortener.ShortenURLs(context.Background(), urls, "1")
 		}
 	})
 
 	b.Run("shorten_and_save_link", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			shortener.ShortenAndSaveLink("ysadsadas", "1")
+			shortener.ShortenAndSaveLink(context.Background(), "ysadsadas", "1")
 		}
 	})
 
 	b.Run("get_one_by_originalURL", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			shortener.GetOneByOriginalURL("blab2la.com")
+			shortener.GetOneByOriginalURL(context.Background(), "blab2la.com")
 		}
 	})
 }
@@ -139,7 +140,7 @@ func TestShortener_DeleteURLs(t *testing.T) {
 				repo:    tt.fields.repo,
 				baseURL: tt.fields.baseURL,
 			}
-			s.DeleteURLs(tt.args.urls, tt.args.userID)
+			s.DeleteURLs(context.Background(), tt.args.urls, tt.args.userID)
 		})
 	}
 }
@@ -202,7 +203,7 @@ func TestShortener_GetOneByOriginalURL(t *testing.T) {
 				repo:    tt.fields.repo,
 				baseURL: tt.fields.baseURL,
 			}
-			got, got1 := s.GetOneByOriginalURL(tt.args.url)
+			got, got1 := s.GetOneByOriginalURL(context.Background(), tt.args.url)
 			if got != tt.want {
 				t.Errorf("GetOneByOriginalURL() got = %v, want %v", got, tt.want)
 			}
@@ -236,7 +237,7 @@ func TestShortener_GetOneByShortURL(t *testing.T) {
 				repo:    tt.fields.repo,
 				baseURL: tt.fields.baseURL,
 			}
-			got, got1 := s.GetOneByShortURL(tt.args.key)
+			got, got1 := s.GetOneByShortURL(context.Background(), tt.args.key)
 			if got != tt.want {
 				t.Errorf("GetOneByShortURL() got = %v, want %v", got, tt.want)
 			}
@@ -269,7 +270,7 @@ func TestShortener_IsDeleted(t *testing.T) {
 				repo:    tt.fields.repo,
 				baseURL: tt.fields.baseURL,
 			}
-			if got := s.IsDeleted(tt.args.shortURL); got != tt.want {
+			if got := s.IsDeleted(context.Background(), tt.args.shortURL); got != tt.want {
 				t.Errorf("IsDeleted() = %v, want %v", got, tt.want)
 			}
 		})
@@ -299,7 +300,7 @@ func TestShortener_ListAll(t *testing.T) {
 				repo:    tt.fields.repo,
 				baseURL: tt.fields.baseURL,
 			}
-			got, err := s.ListAll(tt.args.userID)
+			got, err := s.ListAll(context.Background(), tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -329,7 +330,7 @@ func TestShortener_PingDB(t *testing.T) {
 				repo:    tt.fields.repo,
 				baseURL: tt.fields.baseURL,
 			}
-			if err := s.PingDB(); (err != nil) != tt.wantErr {
+			if err := s.PingDB(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("PingDB() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -360,7 +361,7 @@ func TestShortener_ShortenAndSaveLink(t *testing.T) {
 				repo:    tt.fields.repo,
 				baseURL: tt.fields.baseURL,
 			}
-			got, err := s.ShortenAndSaveLink(tt.args.originalURL, tt.args.userID)
+			got, err := s.ShortenAndSaveLink(context.Background(), tt.args.originalURL, tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ShortenAndSaveLink() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -421,7 +422,7 @@ func TestShortener_ShortenURLs(t *testing.T) {
 				repo:    tt.fields.repo,
 				baseURL: tt.fields.baseURL,
 			}
-			got, err := s.ShortenURLs(tt.args.urls, tt.args.userID)
+			got, err := s.ShortenURLs(context.Background(), tt.args.urls, tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ShortenURLs() error = %v, wantErr %v", err, tt.wantErr)
 				return
