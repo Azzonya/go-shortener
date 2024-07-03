@@ -1,6 +1,7 @@
 package inmemory
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -82,7 +83,7 @@ func TestSt_Add(t *testing.T) {
 				filePath: tt.fields.filePath,
 				lastID:   tt.fields.lastID,
 			}
-			if err := s.Add(tt.args.originalURL, tt.args.shortURL, tt.args.userID); (err != nil) != tt.wantErr {
+			if err := s.Add(context.Background(), tt.args.originalURL, tt.args.shortURL, tt.args.userID); (err != nil) != tt.wantErr {
 				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -123,7 +124,7 @@ func TestSt_CreateShortURLs(t *testing.T) {
 				filePath: tt.fields.filePath,
 				lastID:   tt.fields.lastID,
 			}
-			if err := s.CreateShortURLs(tt.args.urls, tt.args.userID); (err != nil) != tt.wantErr {
+			if err := s.CreateShortURLs(context.Background(), tt.args.urls, tt.args.userID); (err != nil) != tt.wantErr {
 				t.Errorf("CreateShortURLs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -164,7 +165,7 @@ func TestSt_DeleteURLs(t *testing.T) {
 				filePath: tt.fields.filePath,
 				lastID:   tt.fields.lastID,
 			}
-			if err := s.DeleteURLs(tt.args.urls, tt.args.userID); (err != nil) != tt.wantErr {
+			if err := s.DeleteURLs(context.Background(), tt.args.urls, tt.args.userID); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteURLs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -208,11 +209,11 @@ func TestSt_GetByOriginalURL(t *testing.T) {
 				filePath: tt.fields.filePath,
 				lastID:   tt.fields.lastID,
 			}
-			if err := s.Add(tt.args.originalURL, "tst", ""); (err != nil) != false {
+			if err := s.Add(context.Background(), tt.args.originalURL, "tst", ""); (err != nil) != false {
 				t.Errorf("Add() error = %v, wantErr %v", err, false)
 			}
 
-			got, got1 := s.GetByOriginalURL(tt.args.originalURL)
+			got, got1 := s.GetByOriginalURL(context.Background(), tt.args.originalURL)
 			if got != tt.want {
 				t.Errorf("GetByOriginalURL() got = %v, want %v", got, tt.want)
 			}
@@ -260,11 +261,11 @@ func TestSt_GetByShortURL(t *testing.T) {
 				filePath: tt.fields.filePath,
 				lastID:   tt.fields.lastID,
 			}
-			if err := s.Add(tt.want, tt.args.shortURL, ""); (err != nil) != false {
+			if err := s.Add(context.Background(), tt.want, tt.args.shortURL, ""); (err != nil) != false {
 				t.Errorf("Add() error = %v, wantErr %v", err, false)
 			}
 
-			got, got1 := s.GetByShortURL(tt.args.shortURL)
+			got, got1 := s.GetByShortURL(context.Background(), tt.args.shortURL)
 			if got != tt.want {
 				t.Errorf("GetByShortURL() got = %v, want %v", got, tt.want)
 			}
@@ -301,7 +302,7 @@ func TestSt_Initialize(t *testing.T) {
 			s := &St{
 				filePath: tt.fields.filePath,
 			}
-			if err := s.Initialize(); (err != nil) != tt.wantErr {
+			if err := s.Initialize(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -344,7 +345,7 @@ func TestSt_ListAll(t *testing.T) {
 				filePath: tt.fields.filePath,
 				lastID:   tt.fields.lastID,
 			}
-			_, err := s.ListAll(tt.args.userID)
+			_, err := s.ListAll(context.Background(), tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListAll() error = %v, wantErr %v", err, tt.wantErr)
 				return
