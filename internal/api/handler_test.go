@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -87,8 +88,9 @@ func TestRest_ShortenJSON(t *testing.T) {
 			shortURL := repObj.Result
 
 			parts := strings.Split(shortURL, "/")
+			ctx := context.Background()
 
-			originalURL, exist := tt.rest.shortener.GetOneByShortURL(parts[len(parts)-1])
+			originalURL, exist := tt.rest.shortener.GetOneByShortURL(ctx, parts[len(parts)-1])
 			if !exist {
 				require.Fail(t, "Expected short URL in urlMap")
 			}
@@ -153,8 +155,9 @@ func TestRest_Shorten(t *testing.T) {
 			shortURL := string(reqObj)
 
 			parts := strings.Split(shortURL, "/")
+			ctx := context.Background()
 
-			originalURL, exist := tt.rest.shortener.GetOneByShortURL(parts[len(parts)-1])
+			originalURL, exist := tt.rest.shortener.GetOneByShortURL(ctx, parts[len(parts)-1])
 			if !exist {
 				require.Fail(t, "Expected short URL in urlMap")
 			}
@@ -207,8 +210,9 @@ func TestRest_Redirect(t *testing.T) {
 			require.NoError(t, err)
 
 			tt.rest.shortener = shortener_service.New("http://localhost:8080", repo)
+			ctx := context.Background()
 
-			err = repo.Add(tt.want.location, testShortURL, "")
+			err = repo.Add(ctx, tt.want.location, testShortURL, "")
 			require.NoError(t, err)
 
 			request := httptest.NewRequest(tt.requestMethod, "/"+testShortURL, nil)

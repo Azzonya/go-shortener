@@ -45,9 +45,9 @@ func (s *St) Shorten(ctx context.Context, req *pb.ShortenRequest) (*pb.ShortenRe
 		userID = user.ID
 	}
 
-	outputURL, err := s.shortener.ShortenAndSaveLink(reqObj, userID)
+	outputURL, err := s.shortener.ShortenAndSaveLink(ctx, reqObj, userID)
 	if err != nil {
-		outputURL, exist = s.shortener.GetOneByOriginalURL(reqObj)
+		outputURL, exist = s.shortener.GetOneByOriginalURL(ctx, reqObj)
 		if !exist {
 			return &pb.ShortenResponse{ShortenedUrl: outputURL}, errors.New("failed to add URL to in-memory storage")
 		}
@@ -65,17 +65,17 @@ func (s *St) Shorten(ctx context.Context, req *pb.ShortenRequest) (*pb.ShortenRe
 // Returns:
 //   - *pb.RedirectResponse: The response containing the original URL.
 //   - error: An error if the original URL couldn't be retrieved.
-func (s *St) Redirect(_ context.Context, req *pb.RedirectRequest) (*pb.RedirectResponse, error) {
+func (s *St) Redirect(ctx context.Context, req *pb.RedirectRequest) (*pb.RedirectResponse, error) {
 	shortURL := req.GetShortUrl()
 	if shortURL == "" {
 		return nil, errors.New("short_url is empty")
 	}
 
-	if s.shortener.IsDeleted(shortURL) {
+	if s.shortener.IsDeleted(ctx, shortURL) {
 		return nil, errors.New("short_url is deleted")
 	}
 
-	originalURL, exist := s.shortener.GetOneByShortURL(shortURL)
+	originalURL, exist := s.shortener.GetOneByShortURL(ctx, shortURL)
 	if !exist {
 		return nil, errors.New("failed to get original URL")
 	}
@@ -105,7 +105,7 @@ func (s *St) ShortenURLs(ctx context.Context, req *pb.ShortenURLsRequest) (*pb.S
 		urls = append(urls, &entities.ReqURL{OriginalURL: u.GetUrl()})
 	}
 
-	shortenedURLs, err := s.shortener.ShortenURLs(urls, userID)
+	shortenedURLs, err := s.shortener.ShortenURLs(ctx, urls, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (s *St) ListAll(ctx context.Context, _ *emptypb.Empty) (*pb.ListAllRequest,
 		return nil, errors.New("user is new")
 	}
 
-	result, err := s.shortener.ListAll(user.ID)
+	result, err := s.shortener.ListAll(ctx, user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (s *St) DeleteURLs(ctx context.Context, req *pb.DeleteURLsRequest) (*emptyp
 		shortURLs = append(shortURLs, req.ShortUrls[i].ShortUrl)
 	}
 
-	s.shortener.DeleteURLs(shortURLs, user.ID)
+	s.shortener.DeleteURLs(ctx, shortURLs, user.ID)
 
 	return &emptypb.Empty{}, nil
 }
@@ -202,8 +202,8 @@ func (s *St) DeleteURLs(ctx context.Context, req *pb.DeleteURLsRequest) (*emptyp
 // Returns:
 //   - *pb.StatsResponse: The response containing the statistics.
 //   - error: An error if the statistics couldn't be retrieved.
-func (s *St) Stats(_ context.Context, _ *emptypb.Empty) (*pb.StatsResponse, error) {
-	stats, err := s.shortener.GetStats()
+func (s *St) Stats(ctx context.Context, _ *emptypb.Empty) (*pb.StatsResponse, error) {
+	stats, err := s.shortener.GetStats(ctx)
 	if err != nil {
 		return nil, errors.New("failed to get stats")
 	}

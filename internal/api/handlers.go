@@ -2,6 +2,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -42,14 +43,16 @@ func (o *Rest) ShortenJSON(c *gin.Context) {
 		return
 	}
 
-	user, ok := session.GetUserFromContext(c.Request.Context())
+	ctx := c.Request.Context()
+
+	user, ok := session.GetUserFromContext(ctx)
 	if ok {
 		userID = user.ID
 	}
 
-	resp.Result, err = o.shortener.ShortenAndSaveLink(req.URL, userID)
+	resp.Result, err = o.shortener.ShortenAndSaveLink(ctx, req.URL, userID)
 	if err != nil {
-		resp.Result, exist = o.shortener.GetOneByOriginalURL(req.URL)
+		resp.Result, exist = o.shortener.GetOneByOriginalURL(ctx, req.URL)
 		if !exist {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "Failed to create short URL",
@@ -89,16 +92,18 @@ func (o *Rest) Shorten(c *gin.Context) {
 		return
 	}
 
-	user, ok := session.GetUserFromContext(c.Request.Context())
+	ctx := c.Request.Context()
+
+	user, ok := session.GetUserFromContext(ctx)
 	if ok {
 		userID = user.ID
 	}
 
 	reqObj := strings.TrimSpace(string(body))
 
-	outputURL, err := o.shortener.ShortenAndSaveLink(reqObj, userID)
+	outputURL, err := o.shortener.ShortenAndSaveLink(ctx, reqObj, userID)
 	if err != nil {
-		outputURL, exist = o.shortener.GetOneByOriginalURL(reqObj)
+		outputURL, exist = o.shortener.GetOneByOriginalURL(ctx, reqObj)
 		if !exist {
 			c.String(http.StatusBadRequest, "Failed to add line to inmemory")
 			return
@@ -122,12 +127,14 @@ func (o *Rest) Redirect(c *gin.Context) {
 		return
 	}
 
-	if o.shortener.IsDeleted(shortURL) {
+	ctx := c.Request.Context()
+
+	if o.shortener.IsDeleted(ctx, shortURL) {
 		c.AbortWithStatus(http.StatusGone)
 		return
 	}
 
-	URL, exist := o.shortener.GetOneByShortURL(shortURL)
+	URL, exist := o.shortener.GetOneByShortURL(ctx, shortURL)
 	if !exist {
 		c.String(http.StatusBadRequest, "Failed to get original URL")
 		return
@@ -151,12 +158,14 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 		return
 	}
 
-	user, ok := session.GetUserFromContext(c.Request.Context())
+	ctx := c.Request.Context()
+
+	user, ok := session.GetUserFromContext(ctx)
 	if ok {
 		userID = user.ID
 	}
 
-	shortenedURLs, err := o.shortener.ShortenURLs(URLs, userID)
+	shortenedURLs, err := o.shortener.ShortenURLs(ctx, URLs, userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Shorten URLs",
@@ -173,7 +182,9 @@ func (o *Rest) ShortenURLs(c *gin.Context) {
 func (o *Rest) ListAll(c *gin.Context) {
 	var err error
 
-	u, ok := session.GetUserFromContext(c.Request.Context())
+	ctx := c.Request.Context()
+
+	u, ok := session.GetUserFromContext(ctx)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to get user",
@@ -192,7 +203,7 @@ func (o *Rest) ListAll(c *gin.Context) {
 
 	userID := u.ID
 
-	result, err := o.shortener.ListAll(userID)
+	result, err := o.shortener.ListAll(ctx, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to get urls",
@@ -228,7 +239,9 @@ func (o *Rest) DeleteURLs(c *gin.Context) {
 		return
 	}
 
-	u, err := session.GetUser(c.Request.Context())
+	ctx := c.Request.Context()
+
+	u, err := session.GetUser(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to get user",
@@ -239,7 +252,7 @@ func (o *Rest) DeleteURLs(c *gin.Context) {
 
 	userID := u.ID
 
-	o.shortener.DeleteURLs(shortURLs, userID)
+	o.shortener.DeleteURLs(ctx, shortURLs, userID)
 
 	c.AbortWithStatus(http.StatusAccepted)
 }
@@ -252,7 +265,7 @@ func (o *Rest) Stats(c *gin.Context) {
 		return
 	}
 
-	stats, err := o.shortener.GetStats()
+	stats, err := o.shortener.GetStats(context.Background())
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Failed to get stats",
